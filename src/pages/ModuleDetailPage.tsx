@@ -4,7 +4,25 @@ import { Plus, Minus, FileDown, ArrowUp, ArrowDown, Search } from 'lucide-react'
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+// import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+L.Icon.Default.mergeOptions({
+  iconUrl: 'https://www.s-parking.com/assets/marker-icon-2x.png',
+  iconRetinaUrl: 'https://www.s-parking.com/assets/marker-icon-2x.png',
+  shadowUrl: '', // You can provide a shadow image URL if you want, or leave as empty string
+});
+
+const customIcon = new L.Icon({
+  iconUrl: 'https://www.s-parking.com/assets/marker-icon-2x.png',
+  iconRetinaUrl: 'https://www.s-parking.com/assets/marker-icon-2x.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: '',
+  shadowSize: [41, 41],
+});
 
 // Field definitions for each module
 const moduleFields: Record<string, string[]> = {
@@ -357,19 +375,19 @@ export default function ModuleDetailPage() {
               {/* ICDS Centres */}
               {Object.entries(icdsCases).map(([name, count]) =>
                 centreCoords[name] ? (
-                  <Marker key={name} position={centreCoords[name]}>
+                <Marker key={name} icon={customIcon} position={centreCoords[name]}>
                     <Popup>
                       <div className="font-semibold text-blue-700">{name}</div>
                       <div className="text-sm">ICDS Centre</div>
                       <div className="text-green-700 font-bold mt-1">{count} case(s) reported</div>
                     </Popup>
-                  </Marker>
+                  </Marker>  
                 ) : null
               )}
               {/* Health Centres */}
               {Object.entries(healthCentreCases).map(([name, count]) =>
                 centreCoords[name] ? (
-                  <Marker key={name} position={centreCoords[name]}>
+                  <Marker key={name} icon={customIcon} position={centreCoords[name]}>
                     <Popup>
                       <div className="font-semibold text-blue-700">{name}</div>
                       <div className="text-sm">Health Centre</div>
