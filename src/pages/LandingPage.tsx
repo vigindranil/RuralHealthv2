@@ -58,7 +58,7 @@ export default function LandingPage() {
   <div
     className="absolute inset-0"
     style={{
-      backgroundImage: "url('http://www.vyomainnovus.com/assets/gp2.png')",
+      backgroundImage: "url('https://www.s-parking.com/assets/gp2.png')",
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       opacity: 0.18,
@@ -79,7 +79,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
               <img
-                src="http://www.vyomainnovus.com/assets/logo.png"
+                src="https://www.s-parking.com/assets/logo.png"
                 alt="Logo"
                 className="w-12 h-12 rounded-xl border-2 border-blue-400 shadow-md bg-white object-contain"
               />
@@ -107,7 +107,7 @@ export default function LandingPage() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-10 relative z-10">
           <div className="relative w-full max-w-xs md:max-w-sm mb-8 md:mb-0 animate-fadein-slideup" style={{ animationDelay: '0.1s' }}>
             <img
-              src="http://www.vyomainnovus.com/assets/gp1.jpg"
+              src="https://www.s-parking.com/assets/gp1.jpg"
               alt="Gram Panchayat Office"
               className="w-full h-[260px] object-cover rounded-2xl shadow-2xl border-4 border-white"
             />
