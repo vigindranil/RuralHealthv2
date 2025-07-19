@@ -53,21 +53,36 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 relative overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 via-transparent to-green-600/20"></div>
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-white/5 to-transparent rounded-full"></div>
-      </div>
+      <div className="absolute inset-0 z-0">
+  {/* Faint blended background image */}
+  <div
+    className="absolute inset-0"
+    style={{
+      backgroundImage: "url('/dist/assets/gp2.png')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      opacity: 0.18,
+      pointerEvents: 'none',
+      zIndex: 0,
+    }}
+  />
+  {/* Existing blue/green gradients and blobs */}
+  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 via-transparent to-green-600/20"></div>
+  <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
+  <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
+  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-white/5 to-transparent rounded-full"></div>
+</div>
 
       {/* Header */}
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-blue-500 to-green-500 p-3 rounded-xl shadow-lg">
-                <Heart className="w-8 h-8 text-white" />
-              </div>
+              <img
+                src="/dist/assets/logo.png"
+                alt="Logo"
+                className="w-12 h-12 rounded-xl border-2 border-blue-400 shadow-md bg-white object-contain"
+              />
               <div>
                 <span className="text-2xl font-bold text-white">Rural Health Monitor</span>
                 <p className="text-blue-200 text-sm">Transforming Healthcare</p>
@@ -86,46 +101,72 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-10">
-          <img
-            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80"
-            alt="Gram Panchayat Office"
-            className="w-full max-w-xs md:max-w-sm rounded-2xl shadow-xl border-4 border-white mb-8 md:mb-0"
-            style={{ objectFit: 'cover', height: '260px' }}
-          />
-          <div className="flex-1 text-center md:text-left">
+        {/* Animated background blobs */}
+        <div className="absolute -top-20 -left-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-blob1 z-0" />
+        <div className="absolute top-40 right-0 w-80 h-80 bg-green-400/20 rounded-full blur-3xl animate-blob2 z-0" />
+        <div className="flex flex-col md:flex-row items-center justify-center gap-10 relative z-10">
+          <div className="relative w-full max-w-xs md:max-w-sm mb-8 md:mb-0 animate-fadein-slideup" style={{ animationDelay: '0.1s' }}>
+            <img
+              src="/dist/assets/gp2.png"
+              alt="Gram Panchayat Office"
+              className="w-full h-[260px] object-cover rounded-2xl shadow-2xl border-4 border-white"
+            />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-blue-900/40 via-transparent to-green-400/10 pointer-events-none" />
+          </div>
+          <div className="flex-1 text-center md:text-left bg-white/80 rounded-2xl shadow-xl border border-blue-100 p-8 md:p-12 backdrop-blur-md animate-fadein-slideup" style={{ animationDelay: '0.25s' }}>
             <div className="mb-8">
-              <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/20 text-blue-200 text-sm font-medium backdrop-blur-sm border border-blue-400/30">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/20 text-blue-700 text-sm font-medium backdrop-blur-sm border border-blue-400/30 animate-fadein" style={{ animationDelay: '0.4s' }}>
                 <Award className="w-4 h-4 mr-2" />
-                Award-Winning Health Monitoring Platform
+                 Health Monitoring Platform
               </span>
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-blue-900 mb-8 leading-tight drop-shadow animate-fadein-slideup" style={{ animationDelay: '0.35s' }}>
               Transforming
               <span className="bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent block">
                 Rural Healthcare
               </span>
-              <span className="text-5xl md:text-6xl">Monitoring</span>
+              <span className="text-4xl md:text-5xl">Monitoring</span>
             </h1>
-            <p className="text-xl text-blue-100 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Comprehensive health monitoring system for rural communities. Track maternal health, 
-              child nutrition, immunization, and infectious diseases with real-time data collection, 
-              AI-powered analytics, and actionable insights.
+            <p className="text-lg md:text-xl text-blue-800 mb-10 max-w-3xl mx-auto leading-relaxed animate-fadein" style={{ animationDelay: '0.45s' }}>
+              Comprehensive health monitoring system for rural communities. Track maternal health, child nutrition, immunization, and infectious diseases with real-time data collection, AI-powered analytics, and actionable insights.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start">
               <button
                 onClick={() => navigate('/login')}
-                className="bg-gradient-to-r from-blue-500 to-green-500 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:from-blue-600 hover:to-green-600 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl transform hover:scale-105"
+                className="bg-gradient-to-r from-blue-500 to-green-500 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:from-blue-600 hover:to-green-600 transition-all duration-300 flex items-center justify-center space-x-3 shadow-xl hover:shadow-2xl transform hover:scale-[1.07] animate-fadein"
+                style={{ animationDelay: '0.55s' }}
               >
                 <span>Get Started Now</span>
                 <ArrowRight className="w-6 h-6" />
               </button>
-              <button className="border-2 border-white/30 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+              <button className="border-2 border-blue-400/30 text-blue-700 px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 transition-all duration-300 backdrop-blur-sm animate-fadein" style={{ animationDelay: '0.65s' }}>
                 Watch Demo
               </button>
             </div>
           </div>
         </div>
+        <style>{`
+          @keyframes fadein {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes fadein-slideup {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: none; }
+          }
+          @keyframes blob1 {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.1) translateY(20px); }
+          }
+          @keyframes blob2 {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.08) translateY(-18px); }
+          }
+          .animate-fadein { animation: fadein 0.7s both; }
+          .animate-fadein-slideup { animation: fadein-slideup 0.8s both; }
+          .animate-blob1 { animation: blob1 7s ease-in-out infinite alternate; }
+          .animate-blob2 { animation: blob2 8s ease-in-out infinite alternate; }
+        `}</style>
       </section>
 
       {/* Stats Section */}
