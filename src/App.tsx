@@ -9,6 +9,9 @@ import DataEntry from './pages/DataEntry';
 import Reports from './pages/Reports';
 import Navigation from './components/Navigation';
 import ModuleDetailPage from './pages/ModuleDetailPage';
+import GPProfile from './pages/GPProfile';
+import ICDSDataEntry from './pages/ICDSDataEntry';
+import HealthCentreDataEntry from './pages/HealthCentreDataEntry';
 
 function AppContent() {
   const { user } = useAuth();
@@ -24,6 +27,9 @@ function AppContent() {
           <Route path="/data-entry" element={user ? <DataEntry /> : <Navigate to="/login" />} />
           <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />} />
           <Route path="/details/:moduleId" element={user ? <ModuleDetailPage /> : <Navigate to="/login" />} />
+          <Route path="/gp-profile" element={<GPProfile />} />
+          <Route path="/icds-data-entry" element={<ICDSDataEntry />} />
+          <Route path="/health-centre-data-entry" element={<HealthCentreDataEntry />} />
         </Routes>
       </Router>
     </div>

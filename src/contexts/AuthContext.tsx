@@ -7,15 +7,26 @@ interface User {
   district: string;
   block: string;
   gpName?: string;
-  centreName?: string;
-  centreId?: string;
+  // New fields for GP profile
+  gpAddress?: string;
+  gpPradhanName?: string;
+  gpPradhanContact?: string;
+  gpSecretaryName?: string;
+  gpSecretaryContact?: string;
+  executiveOfficerName?: string;
+  executiveOfficerContact?: string;
+  totalPopulation?: number;
+  malePopulation?: number;
+  femalePopulation?: number;
+  totalICDSCentre?: number;
+  totalHealthCentre?: number;
 }
-
 interface AuthContextType {
   user: User | null;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  setUser: (user: User) => void; // <-- Add this
 }
 
 interface LoginCredentials {
@@ -36,6 +47,7 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     // Simulate API call
@@ -97,7 +109,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     login,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    setUser, // <-- Add this
   };
 
   return (

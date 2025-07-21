@@ -63,6 +63,15 @@ export default function Navigation() {
                 <div className="text-gray-500">{user?.role}</div>
               </div>
             </div>
+            {user?.role === 'GP' && (
+                <button
+                  onClick={() => navigate('/gp-profile')}
+                  className="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+                >
+                  <span>Edit GP Profile</span>
+                </button>
+              )}
+            
             <button
               onClick={handleLogout}
               className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"

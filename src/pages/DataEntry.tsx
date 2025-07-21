@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Save, X } from 'lucide-react';
+import { FileText, Plus, Save, X,Building } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import FormModal from '../components/FormModal';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function DataEntry() {
   const { user } = useAuth();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate(); // Add this if not present
 
   const modules = [
     {
@@ -160,6 +163,45 @@ export default function DataEntry() {
             <p className="text-gray-600 text-sm">{module.description}</p>
           </div>
         ))}
+         <div
+            onClick={() => navigate('/icds-data-entry')}
+            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="text-3xl">
+                <Building className="w-8 h-8 text-green-500" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  ICDS
+                </span>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">ICDS Centre Data Entry</h3>
+            <p className="text-gray-600 text-sm">
+              Enter or update details for your Anganwadi/ICDS Centre.
+            </p>
+          </div>
+
+          <div
+            onClick={() => navigate('/health-centre-data-entry')}
+            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="text-3xl">
+                <Building className="w-8 h-8 text-green-500" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  Health Centre
+                </span>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Health Centre Data Entry</h3>
+            <p className="text-gray-600 text-sm">
+              Enter or update details for your Health Centre.
+            </p>
+          </div>
       </div>
 
       {/* Form Modal */}
