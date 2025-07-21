@@ -51,7 +51,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       'childbirths': {
         title: 'Childbirths (Non-Institutional)',
         fields: [
-          { id: 'name', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
+          { id: 'motherMaId', label: "Mother's ID (Matri Ma ID)", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
+          { id: 'motherName', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
           { id: 'district', label: 'District', type: 'text', defaultValue: DISTRICT, readOnly: true, icon: <MapPin className="w-4 h-4" /> },
           { id: 'block', label: 'Block', type: 'text', defaultValue: BLOCK, readOnly: true, icon: <MapPin className="w-4 h-4" /> },
           { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: GP, readOnly: true, icon: <MapPin className="w-4 h-4" /> },
