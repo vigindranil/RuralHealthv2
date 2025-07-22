@@ -1,12 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, LayoutDashboard, FileText, BarChart3, LogOut, User } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import Cookies from 'js-cookie'; // For cookie handling
+import { decodeJwtToken } from '../utils/decodetoken'; // Only allowed util import
 
 export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const [user, setUser] = useState<any>(null); // User state from decoded token
+
+  // Decode token and set user on mount
+  useEffect(() => {
+    const token = Cookies.get('authToken');
+    if (token) {
+      const decoded = decodeJwtToken(token);
+      if (decoded) {
+        // Map role based on UserTypeID or UserTypeName (matching Dashboard logic)
+        let mappedRole = 'GP'; // Default fallback
+        if (decoded.UserTypeID === 150 || decoded.UserTypeName === 'DistrictAdmin') {
+          mappedRole = 'District Admin';
+        } else if (decoded.UserTypeName === 'ICDS') {
+          mappedRole = 'ICDS Centre';
+        } else if (decoded.UserTypeName === 'Health') {
+          mappedRole = 'Health Centre';
+        }
+
+        setUser({
+          name: decoded.UserFullName,
+          role: mappedRole,
+          // Add other fields if needed
+        });
+      } else {
+        // Invalid token: clear cookies and redirect to login
+        Cookies.remove('authToken');
+        Cookies.remove('userTypeID');
+        navigate('/login');
+      }
+    } else {
+      // No token: redirect to login (though ProtectedRoute should handle this)
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  // If user is not loaded yet, show a placeholder or nothing (Navigation is only shown if token exists)
+  if (!user) {
+    return null; // Or a loading spinner if preferred
+  }
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -15,7 +54,9 @@ export default function Navigation() {
   ];
 
   const handleLogout = () => {
-    logout();
+    // Clear cookies instead of performLogout
+    Cookies.remove('authToken');
+    Cookies.remove('userTypeID');
     navigate('/');
   };
 
@@ -36,18 +77,17 @@ export default function Navigation() {
             {navItems.map((item) => (
               // Only show Data Entry for GP users
               (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  location.pathname === item.path
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
+                    }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
               )
             ))}
           </div>
@@ -64,14 +104,14 @@ export default function Navigation() {
               </div>
             </div>
             {user?.role === 'GP' && (
-                <button
-                  onClick={() => navigate('/gp-profile')}
-                  className="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center space-x-2"
-                >
-                  <span>Edit GP Profile</span>
-                </button>
-              )}
-            
+              <button
+                onClick={() => navigate('/gp-profile')}
+                className="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+              >
+                <span>Edit GP Profile</span>
+              </button>
+            )}
+
             <button
               onClick={handleLogout}
               className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
@@ -88,18 +128,17 @@ export default function Navigation() {
             {navItems.map((item) => (
               // Only show Data Entry for GP users
               (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  location.pathname === item.path
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
+                    }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
               )
             ))}
           </div>

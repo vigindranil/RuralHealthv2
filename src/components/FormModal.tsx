@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, User, Phone, MapPin, Building } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
+import { addEntry } from '../utils/dataUtils'; // Import hardcoded data utils (replaces DataContext)
 
 interface FormModalProps {
   moduleId: string | null;
@@ -10,8 +10,11 @@ interface FormModalProps {
 }
 
 export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps) {
-  const { user } = useAuth();
-  const { addEntry } = useData();
+  // Use hardcoded user from utils (no context) - fallback to GP for demo if null
+  const user = getUser() || {
+    id: '1',
+    role: 'GP',
+  };
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -273,12 +276,12 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Add entry to data context
+
+      // Add entry using dataUtils (replaces DataContext)
       if (user) {
         addEntry(moduleId, formData, user.id);
       }
-      
+
       alert('Data submitted successfully!');
       onClose();
       setFormData({});
@@ -326,7 +329,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                   <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-2">
                     {field.label} {field.required && <span className="text-red-500">*</span>}
                   </label>
-                  
+
                   {field.type === 'select' ? (
                     <select
                       id={field.id}
@@ -364,9 +367,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                         required={field.required}
                         value={formData[field.id] || field.defaultValue || ''}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          field.icon ? 'pl-10 pr-3' : 'px-3'
-                        }`}
+                        className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'
+                          }`}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                         disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
                       />

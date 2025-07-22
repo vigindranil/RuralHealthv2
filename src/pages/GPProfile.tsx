@@ -1,9 +1,7 @@
-// src/pages/GPProfile.tsx
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-
+import { getUser, setUser as updateUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import {
-  User, MapPin, Phone, Users, UserCheck, UserCog, Building , HeartPulse
+  User, MapPin, Phone, Users, UserCheck, UserCog, Building, HeartPulse
 } from 'lucide-react';
 
 const GP_PROFILE_FIELDS = [
@@ -17,17 +15,18 @@ const GP_PROFILE_FIELDS = [
   { name: 'executiveOfficerContact', label: 'Executive Officer Contact Number', icon: <Phone className="w-5 h-5 text-blue-400" /> },
   { name: 'totalPopulation', label: 'Total Population', type: 'number', icon: <Users className="w-5 h-5 text-blue-700" /> },
   { name: 'malePopulation', label: 'Male Population', type: 'number', icon: <User className="w-5 h-5 text-blue-500" /> },
-{ name: 'femalePopulation', label: 'Female Population', type: 'number', icon: <User className="w-5 h-5 text-pink-400" /> },
+  { name: 'femalePopulation', label: 'Female Population', type: 'number', icon: <User className="w-5 h-5 text-pink-400" /> },
   { name: 'totalICDSCentre', label: 'Total ICDS Centres', type: 'number', icon: <HeartPulse className="w-5 h-5 text-red-400" /> },
   { name: 'totalHealthCentre', label: 'Total Health Centres', type: 'number', icon: <HeartPulse className="w-5 h-5 text-green-400" /> },
 ];
 
 export default function GPProfile() {
-  const { user, setUser } = useAuth();
-  const [form, setForm] = useState({ ...user });
+  // Use hardcoded user from utils (no context)
+  const currentUser = getUser();
+  const [form, setForm] = useState({ ...currentUser });
   const [success, setSuccess] = useState(false);
 
-  if (!user || user.role !== 'GP') {
+  if (!currentUser || currentUser.role !== 'GP') {
     return (
       <div className="p-8 text-red-600 font-bold text-center">
         Access denied. Only GP users can edit this profile.
@@ -45,7 +44,8 @@ export default function GPProfile() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setUser({ ...user, ...form });
+    // Update hardcoded user via utils
+    updateUser({ ...currentUser, ...form });
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2000);
   };

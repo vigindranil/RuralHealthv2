@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { BarChart3, Download, Calendar, Filter, FileText, TrendingUp, AlertTriangle, Users, Heart } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
+import { entries, getModuleStats } from '../utils/dataUtils'; // Import hardcoded data utils (replaces DataContext)
 
 export default function Reports() {
-  const { user } = useAuth();
-  const { getModuleStats, entries } = useData();
+  // Use hardcoded user from utils (no context) - fallback to GP for demo if null
+  const user = getUser() || {
+    role: 'GP',
+    gpName: 'Belakoba GP',
+    centreName: '',
+    block: 'Jalpaiguri Sadar',
+    district: 'Jalpaiguri',
+  };
+  // Use hardcoded data from utils (no context)
+  const moduleStats = getModuleStats();
   const [selectedPeriod, setSelectedPeriod] = useState('current-month');
   const [selectedModule, setSelectedModule] = useState('all');
-
-  const moduleStats = getModuleStats();
 
   // Only show data that can be entered through the portal
   const reportTypes = [
@@ -18,10 +24,10 @@ export default function Reports() {
       title: 'Maternal Health Report',
       description: 'High-risk pregnancies and maternal health indicators',
       icon: '🤱',
-      data: { 
-        highRisk: moduleStats['high-risk-pregnancy'] || 0, 
-        teenage: moduleStats['teenage-pregnancy'] || 0, 
-        young: moduleStats['young-pregnant-mothers'] || 0 
+      data: {
+        highRisk: moduleStats['high-risk-pregnancy'] || 0,
+        teenage: moduleStats['teenage-pregnancy'] || 0,
+        young: moduleStats['young-pregnant-mothers'] || 0
       }
     },
     {
@@ -29,10 +35,10 @@ export default function Reports() {
       title: 'Child Health Report',
       description: 'Child health and nutrition status report',
       icon: '👶',
-      data: { 
-        malnourished: moduleStats['malnourished-children'] || 0, 
-        underweight: moduleStats['underweight-children'] || 0, 
-        lowBirth: moduleStats['low-birth-weight'] || 0 
+      data: {
+        malnourished: moduleStats['malnourished-children'] || 0,
+        underweight: moduleStats['underweight-children'] || 0,
+        lowBirth: moduleStats['low-birth-weight'] || 0
       }
     },
     {
@@ -40,10 +46,10 @@ export default function Reports() {
       title: 'Infectious Disease Report',
       description: 'Disease surveillance and outbreak monitoring',
       icon: '🦠',
-      data: { 
-        infectious: moduleStats['infectious-diseases'] || 0, 
-        tb: moduleStats['tb-leprosy'] || 0, 
-        total: (moduleStats['infectious-diseases'] || 0) + (moduleStats['tb-leprosy'] || 0) 
+      data: {
+        infectious: moduleStats['infectious-diseases'] || 0,
+        tb: moduleStats['tb-leprosy'] || 0,
+        total: (moduleStats['infectious-diseases'] || 0) + (moduleStats['tb-leprosy'] || 0)
       }
     },
     {
@@ -51,10 +57,10 @@ export default function Reports() {
       title: 'Social Issues Report',
       description: 'Under-age marriages and social health indicators',
       icon: '👥',
-      data: { 
-        marriages: moduleStats['underage-marriage'] || 0, 
-        anemic: moduleStats['anemic-girls'] || 0, 
-        total: (moduleStats['underage-marriage'] || 0) + (moduleStats['anemic-girls'] || 0) 
+      data: {
+        marriages: moduleStats['underage-marriage'] || 0,
+        anemic: moduleStats['anemic-girls'] || 0,
+        total: (moduleStats['underage-marriage'] || 0) + (moduleStats['anemic-girls'] || 0)
       }
     }
   ];
@@ -67,10 +73,10 @@ export default function Reports() {
     { month: 'March', underageMarriages: 0, malnourished: 0, highRisk: 0, diseases: 0 },
     { month: 'April', underageMarriages: 0, malnourished: 0, highRisk: 0, diseases: 0 },
     { month: 'May', underageMarriages: 0, malnourished: 0, highRisk: 0, diseases: 0 },
-    { 
-      month: currentMonth, 
-      underageMarriages: moduleStats['underage-marriage'] || 0, 
-      malnourished: moduleStats['malnourished-children'] || 0, 
+    {
+      month: currentMonth,
+      underageMarriages: moduleStats['underage-marriage'] || 0,
+      malnourished: moduleStats['malnourished-children'] || 0,
       highRisk: moduleStats['high-risk-pregnancy'] || 0,
       diseases: (moduleStats['infectious-diseases'] || 0) + (moduleStats['tb-leprosy'] || 0)
     }
@@ -161,7 +167,7 @@ export default function Reports() {
               <option value="current-year">Current Year</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Filter className="w-4 h-4 inline mr-2" />
@@ -179,7 +185,7 @@ export default function Reports() {
               <option value="social">Social Issues</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <BarChart3 className="w-4 h-4 inline mr-2" />
@@ -214,7 +220,7 @@ export default function Reports() {
                 <span>Download</span>
               </button>
             </div>
-            
+
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
               {Object.entries(report.data).map(([key, value]) => (
@@ -237,7 +243,7 @@ export default function Reports() {
             <span className="text-sm">Data from portal entries</span>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

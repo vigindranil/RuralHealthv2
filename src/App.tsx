@@ -1,7 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { DataProvider } from './contexts/DataContext';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie'; // For cookie checks (consistent with LoginPage and Dashboard)
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
@@ -13,23 +12,59 @@ import GPProfile from './pages/GPProfile';
 import ICDSDataEntry from './pages/ICDSDataEntry';
 import HealthCentreDataEntry from './pages/HealthCentreDataEntry';
 
+// ProtectedRoute wrapper: Checks for authToken in cookies
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const token = Cookies.get('authToken');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// PublicRoute: Redirects to dashboard if already logged in
+const PublicRoute = ({ children }: { children: JSX.Element }) => {
+  const token = Cookies.get('authToken');
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
 function AppContent() {
-  const { user } = useAuth();
+  const [hasToken, setHasToken] = useState(!!Cookies.get('authToken')); // Initial check
+
+  // Listen for token changes (e.g., after login/logout)
+  useEffect(() => {
+    const checkToken = () => setHasToken(!!Cookies.get('authToken'));
+    window.addEventListener('storage', checkToken); // In case cookies change externally
+    return () => window.removeEventListener('storage', checkToken);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Router>
-        {user && <Navigation />}
+        {hasToken && <Navigation />}
         <Routes>
-          <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
-          <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
-          <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/data-entry" element={user ? <DataEntry /> : <Navigate to="/login" />} />
-          <Route path="/reports" element={user ? <Reports /> : <Navigate to="/login" />} />
-          <Route path="/details/:moduleId" element={user ? <ModuleDetailPage /> : <Navigate to="/login" />} />
-          <Route path="/gp-profile" element={<GPProfile />} />
-          <Route path="/icds-data-entry" element={<ICDSDataEntry />} />
-          <Route path="/health-centre-data-entry" element={<HealthCentreDataEntry />} />
+          <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/data-entry" element={<ProtectedRoute><DataEntry /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/details/:moduleId" element={<ProtectedRoute><ModuleDetailPage /></ProtectedRoute>} />
+          <Route path="/gp-profile" element={<ProtectedRoute><GPProfile /></ProtectedRoute>} />
+          <Route path="/icds-data-entry" element={<ProtectedRoute><ICDSDataEntry /></ProtectedRoute>} />
+          <Route path="/health-centre-data-entry" element={<ProtectedRoute><HealthCentreDataEntry /></ProtectedRoute>} />
+          {/* Catch-all redirect for unknown routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </div>
@@ -37,13 +72,7 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <AuthProvider>
-      <DataProvider>
-        <AppContent />
-      </DataProvider>
-    </AuthProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;

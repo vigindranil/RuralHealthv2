@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Save, X,Building } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { FileText, Plus, Save, X, Building } from 'lucide-react';
+import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import FormModal from '../components/FormModal';
 import { useNavigate } from 'react-router-dom';
 
-
 export default function DataEntry() {
-  const { user } = useAuth();
+  // Use hardcoded user from utils (no context) - fallback to GP for demo if null
+  const user = getUser() || {
+    role: 'GP',
+  };
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate(); // Add this if not present
@@ -20,7 +22,7 @@ export default function DataEntry() {
       count: 8
     },
     {
-      id: 'underage-marriage', 
+      id: 'underage-marriage',
       title: 'Under Age Marriages',
       description: 'Report marriages involving minors',
       icon: '💍',
@@ -118,8 +120,8 @@ export default function DataEntry() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Data Entry</h1>
         <p className="text-gray-600 mt-2">
-          {user?.role === 'GP' 
-            ? 'Select a module to enter new data' 
+          {user?.role === 'GP'
+            ? 'Select a module to enter new data'
             : 'Data entry is restricted to GP users only'
           }
         </p>
@@ -131,7 +133,7 @@ export default function DataEntry() {
           <div className="flex items-center space-x-2">
             <FileText className="w-5 h-5 text-yellow-600" />
             <p className="text-yellow-800">
-              Data entry is only available for GP (Gram Panchayat) users. 
+              Data entry is only available for GP (Gram Panchayat) users.
               You can view existing data and reports from the Dashboard and Reports sections.
             </p>
           </div>
@@ -144,11 +146,10 @@ export default function DataEntry() {
           <div
             key={module.id}
             onClick={() => handleModuleClick(module.id)}
-            className={`bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border ${
-              user?.role === 'GP' 
-                ? 'cursor-pointer hover:border-blue-300' 
+            className={`bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border ${user?.role === 'GP'
+                ? 'cursor-pointer hover:border-blue-300'
                 : 'cursor-not-allowed opacity-60'
-            }`}
+              }`}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="text-3xl">{module.icon}</div>
@@ -163,45 +164,45 @@ export default function DataEntry() {
             <p className="text-gray-600 text-sm">{module.description}</p>
           </div>
         ))}
-         <div
-            onClick={() => navigate('/icds-data-entry')}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="text-3xl">
-                <Building className="w-8 h-8 text-green-500" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                  ICDS
-                </span>
-              </div>
+        <div
+          onClick={() => navigate('/icds-data-entry')}
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="text-3xl">
+              <Building className="w-8 h-8 text-green-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">ICDS Centre Data Entry</h3>
-            <p className="text-gray-600 text-sm">
-              Enter or update details for your Anganwadi/ICDS Centre.
-            </p>
+            <div className="flex items-center space-x-2">
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                ICDS
+              </span>
+            </div>
           </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">ICDS Centre Data Entry</h3>
+          <p className="text-gray-600 text-sm">
+            Enter or update details for your Anganwadi/ICDS Centre.
+          </p>
+        </div>
 
-          <div
-            onClick={() => navigate('/health-centre-data-entry')}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="text-3xl">
-                <Building className="w-8 h-8 text-green-500" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Health Centre
-                </span>
-              </div>
+        <div
+          onClick={() => navigate('/health-centre-data-entry')}
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="text-3xl">
+              <Building className="w-8 h-8 text-green-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Health Centre Data Entry</h3>
-            <p className="text-gray-600 text-sm">
-              Enter or update details for your Health Centre.
-            </p>
+            <div className="flex items-center space-x-2">
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                Health Centre
+              </span>
+            </div>
           </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Health Centre Data Entry</h3>
+          <p className="text-gray-600 text-sm">
+            Enter or update details for your Health Centre.
+          </p>
+        </div>
       </div>
 
       {/* Form Modal */}

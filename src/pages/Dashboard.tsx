@@ -1,10 +1,11 @@
 import React from 'react';
 import { Heart, Users, Baby, Shield, TrendingUp, AlertTriangle, FileText, Activity, Calendar, MapPin } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { entries, getModuleStats, getTotalEntries } from '../utils/dataUtils'; // Kept for demo data (remove if not needed)
 import StatsCard from '../components/StatsCard';
 import ChartCard from '../components/ChartCard';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie'; // Standardized to js-cookie
+import { decodeJwtToken } from '../utils/decodetoken';
 
 // Add static block/GP data at the top (after imports):
 const BLOCKS = ['All', 'Jalpaiguri Sadar', 'Maynaguri'];
@@ -15,17 +16,85 @@ const GPS: Record<string, string[]> = {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { getModuleStats, getTotalEntries, entries } = useData();
+  // Initialize user as null (no getUser or fallback)
+  const [user, setUser] = React.useState<any>(null); // Type as any for flexibility; adjust as needed
   const navigate = useNavigate();
 
-  const [selectedBlock, setSelectedBlock] = React.useState(user?.block || 'Jalpaiguri Sadar');
-  const [selectedGP, setSelectedGP] = React.useState(user?.gpName || GPS[selectedBlock][0]);
+  // Default to 'All' since user might be null initially
+  const [selectedBlock, setSelectedBlock] = React.useState('All');
+  const [selectedGP, setSelectedGP] = React.useState(GPS[selectedBlock][0]);
 
   // Update GP list and reset selected GP when block changes
   React.useEffect(() => {
     setSelectedGP(GPS[selectedBlock][0]);
   }, [selectedBlock]);
+
+  // Decode token and update user state on mount
+  React.useEffect(() => {
+    const token = Cookies.get('authToken');
+    if (!token) {
+      // Redirect to login if no token
+      navigate('/');
+      return;
+    }
+
+    const decoded = decodeJwtToken(token);
+    console.log('Decoded token:', decoded);
+    if (decoded) {
+      // Map role based on UserTypeID or UserTypeName
+      let mappedRole = 'GP'; // Default fallback
+      if (decoded.UserTypeID === 150 || decoded.UserTypeName === 'DistrictAdmin') {
+        mappedRole = 'District Admin';
+      } else if (decoded.UserTypeName === 'ICDS') {
+        mappedRole = 'ICDS Centre';
+      } else if (decoded.UserTypeName === 'Health') {
+        mappedRole = 'Health Centre';
+      }
+
+      // Map additional fields based on decoded token (demo mappings; adjust as needed)
+      let block = 'Jalpaiguri Sadar';
+      let gpName = 'Belakoba GP';
+      let centreName = '';
+      let centreId = decoded.BoundaryID.toString(); // Use BoundaryID as centreId for ICDS/Health
+
+      if (mappedRole === 'GP') {
+        block = 'Jalpaiguri Sadar'; // Example: map based on BoundaryLevelID/BoundaryID
+        gpName = `GP ${decoded.BoundaryID}`; // Example mapping
+      } else if (mappedRole === 'ICDS Centre') {
+        centreName = `ICDS Centre ${decoded.BoundaryID}`;
+      } else if (mappedRole === 'Health Centre') {
+        centreName = `Health Centre ${decoded.BoundaryID}`;
+      } else if (mappedRole === 'District Admin') {
+        block = 'All';
+        gpName = 'All';
+      }
+
+      setUser({
+        id: decoded.UserID.toString(),
+        name: decoded.UserFullName,
+        role: mappedRole,
+        district: decoded.BoundaryID ? `District ${decoded.BoundaryID}` : 'Jalpaiguri',
+        block,
+        gpName,
+        centreName,
+        centreId, // Added for filtering
+      });
+
+      // Update selectedBlock/GP based on mapped values
+      setSelectedBlock(block);
+      setSelectedGP(gpName);
+    } else {
+      // Invalid token: clear cookies and redirect
+      Cookies.remove('authToken');
+      Cookies.remove('userTypeID');
+      navigate('/');
+    }
+  }, [navigate]);
+
+  // Loading state while decoding user
+  if (!user) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   // Role-based disables
   const isGP = user?.role === 'GP';
@@ -33,7 +102,7 @@ export default function Dashboard() {
   const isHealth = user?.role === 'Health Centre';
   const isDistrict = user?.role === 'District Admin';
 
-  // Filter entries by role
+  // Filter entries by role (using hardcoded entries from dataUtils)
   let filteredEntries = entries;
   if (isGP) {
     filteredEntries = entries.filter(entry =>
@@ -58,7 +127,7 @@ export default function Dashboard() {
     });
   }
 
-  // Use filteredEntries for stats, charts, etc.
+  // Use filteredEntries for stats, charts, etc. (using functions from dataUtils)
   const moduleStats = getModuleStats();
   const totalEntries = getTotalEntries();
 
@@ -188,7 +257,7 @@ export default function Dashboard() {
   function getTimeAgo(date: Date): string {
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
@@ -245,7 +314,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4" />
-                <span>Jalpaiguri Sadar Block | Belakoba GP</span>
+                <span>{user?.block || 'Jalpaiguri Sadar Block'} | {user?.gpName || 'Belakoba GP'}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4" />
@@ -304,7 +373,7 @@ export default function Dashboard() {
               ]
             }}
           />
-          
+
           <ChartCard
             title="Vulnerable Groups Monitoring"
             type="line"

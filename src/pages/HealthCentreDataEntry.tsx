@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import {
   Building, Hash, User, Phone, MapPin, Home, FileText, CheckCircle, MessageCircle, ClipboardList, Wifi
 } from 'lucide-react';
 
 const HEALTH_CENTRE_FIELDS = [
-
   { name: 'scCode', label: 'Health Centre (SC CODE NO.)', icon: <ClipboardList className="w-5 h-5 text-green-500" /> },
   { name: 'healthCentreName', label: 'Health Centre Name', icon: <Building className="w-5 h-5 text-blue-700" /> },
   { name: 'anmName', label: 'ANM Name', icon: <User className="w-5 h-5 text-purple-500" /> },
@@ -29,7 +28,8 @@ const HEALTH_CENTRE_FIELDS = [
 ];
 
 export default function HealthCentreDataEntry() {
-  const { user } = useAuth();
+  // Use hardcoded user from utils (no context)
+  const user = getUser();
   const [form, setForm] = useState({});
   const [success, setSuccess] = useState(false);
 
@@ -52,6 +52,8 @@ export default function HealthCentreDataEntry() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would send the form data to your backend or context
+    // Optional: Integrate with dataUtils if this should add to hardcoded entries, e.g.:
+    // addEntry('health-centre', form, user.id);
     console.log('Health Centre Data Entry:', form);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2000);

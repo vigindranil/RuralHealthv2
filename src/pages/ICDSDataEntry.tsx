@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import {
   Building, Hash, User, Phone, MapPin, Home, ClipboardList, FileText, CheckCircle, MessageCircle
 } from 'lucide-react';
 
 const ICDS_FIELDS = [
-
   { name: 'amvcNumber', label: 'Anganwadi Center Number (AMVC NO.)', icon: <ClipboardList className="w-5 h-5 text-green-500" /> },
   { name: 'centerCode', label: 'Anganwadi Center Name', icon: <Hash className="w-5 h-5 text-purple-500" /> },
-
   { name: 'awwName', label: 'AWW Name', icon: <User className="w-5 h-5 text-blue-700" /> },
   { name: 'awwContact', label: 'AWW Contact', icon: <Phone className="w-5 h-5 text-blue-400" /> },
   { name: 'awhName', label: 'AWH Name', icon: <User className="w-5 h-5 text-pink-500" /> },
@@ -25,7 +23,8 @@ const ICDS_FIELDS = [
 ];
 
 export default function ICDSDataEntry() {
-  const { user } = useAuth();
+  // Use hardcoded user from utils (no context)
+  const user = getUser();
   const [form, setForm] = useState({});
   const [success, setSuccess] = useState(false);
 
@@ -48,6 +47,8 @@ export default function ICDSDataEntry() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would send the form data to your backend or context
+    // Optional: Integrate with dataUtils if this should add to hardcoded entries, e.g.:
+    // addEntry('icds-centre', form, user.id);
     console.log('ICDS Data Entry:', form);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2000);
