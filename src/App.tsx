@@ -41,10 +41,12 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 
 function AppContent() {
   const [hasToken, setHasToken] = useState(!!Cookies.get('authToken')); // Initial check
+  console.log('Initial token check:', hasToken);
 
   // Listen for token changes (e.g., after login/logout)
   useEffect(() => {
     const checkToken = () => setHasToken(!!Cookies.get('authToken'));
+    console.log('token check triggered:', hasToken);
     window.addEventListener('storage', checkToken); // In case cookies change externally
     return () => window.removeEventListener('storage', checkToken);
   }, []);

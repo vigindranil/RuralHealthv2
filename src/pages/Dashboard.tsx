@@ -6,6 +6,7 @@ import ChartCard from '../components/ChartCard';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie'; // Standardized to js-cookie
 import { decodeJwtToken } from '../utils/decodetoken';
+import Navigation from '../components/Navigation';
 
 // Add static block/GP data at the top (after imports):
 const BLOCKS = ['All', 'Jalpaiguri Sadar', 'Maynaguri'];
@@ -265,7 +266,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6  py-8">
+      
       {/* Block/GP Filter Dropdowns */}
       <div className="flex flex-wrap gap-4 mb-6 items-end">
         {isDistrict && (
