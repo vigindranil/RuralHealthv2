@@ -49,7 +49,7 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 
 function AppContent() {
   const [hasToken, setHasToken] = useState(!!Cookies.get("authToken"));
-  const location = useLocation(); // Initial check
+  const location = useLocation(); 
   console.log("Initial token check:", hasToken);
 
 
