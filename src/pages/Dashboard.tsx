@@ -39,6 +39,8 @@ export default function Dashboard() {
       return;
     }
 
+    // console.log(token);
+
     const decoded = decodeJwtToken(token);
     console.log('Decoded token:', decoded);
     if (decoded) {

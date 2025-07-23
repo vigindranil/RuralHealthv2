@@ -76,7 +76,7 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               // Only show Data Entry for GP users
-              (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
+              (item.path === '/data-entry' && user?.role !== 'GP' && user?.role !== 'District Admin') ? null : (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
