@@ -438,7 +438,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       console.log('API response:', res);
 
 
-      alert(res.message ?? 'Data submitted successfully.');
+      alert('Data submitted successfully.');
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {

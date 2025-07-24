@@ -76,3 +76,58 @@ export async function saveMatriMa(info: MatriMaPayload) {
   );
   return data;    // { status, message, data: { … } }
 }
+
+
+// The parameters required for the API request body
+interface ApiParams {
+  HMTypeID: string;
+  BoundaryLevelID: string;
+  BoundaryID: string;
+  UserID: string;
+  FromDate: string;
+  ToDate: string;
+}
+
+// The structure of a single record as it comes from the API (raw format)
+// We export this so the component knows what kind of data to expect
+export interface ApiResponseRecord {
+  name: string;
+  district: string;
+  block: string;
+  gramPanchayat: string;
+  village: string;
+  husbandName: string;
+  phone: string;
+  icdsCentreName: string;
+  icdsCentreId: string;
+  healthCentreName: string;
+  healthCentreId: string;
+}
+
+
+export const getRawUnderageMarriageData = async (params: ApiParams): Promise<ApiResponseRecord[]> => {
+  const API_URL = 'http://localhost:3010/api/get-matrima-related-info';
+  const token = Cookies.get('authToken');
+
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (result.status !== 0 || !result.data || !result.data.records) {
+    throw new Error(result.message || "Failed to fetch valid data from the API.");
+  }
+  
+  
+  return result.data.records;
+};
