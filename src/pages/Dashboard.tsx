@@ -119,6 +119,7 @@ export default function Dashboard() {
         setUser(userData);
 
         // Fetch dashboard data
+
         try {
           const { fromDate, toDate } = getCurrentMonthDateRange();
 
@@ -144,7 +145,7 @@ export default function Dashboard() {
     };
 
     initializeDashboard();
-  }, [navigate, selectedGP]);
+  }, [navigate]);
 
   useEffect(() => {
     async function fetchData() {
