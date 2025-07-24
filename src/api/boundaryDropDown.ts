@@ -1,5 +1,7 @@
 import Cookies from "js-cookie";
 
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3010/api";
+
 export const boundaryDetailsByBoundaryId = async (
   boundaryLevelId: string,
   boundaryId: string,
@@ -28,7 +30,7 @@ export const boundaryDetailsByBoundaryId = async (
     };
 
     const response = await fetch(
-      "http://localhost:3010/api/get-boundary-details-by-boundary-id",
+      `${BASE_URL}/get-boundary-details-by-boundary-id`,
       requestOptions
     );
 

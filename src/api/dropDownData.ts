@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import { decodeJwtToken } from "../utils/decodetoken";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 export const getAllHealthandIcdsCentres = async () => {
   const token = Cookies.get("authToken");
@@ -25,7 +26,7 @@ export const getAllHealthandIcdsCentres = async () => {
     };
 
     const response = await fetch(
-      "http://localhost:3010/api/get-health-and-icds-centre",
+      `${BASE_URL}/get-health-and-icds-centre`,
       requestOptions
     );
 

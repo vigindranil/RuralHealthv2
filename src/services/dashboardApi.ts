@@ -1,7 +1,7 @@
 import Cookies from 'js-cookie';
 import { DashboardResponse } from '../types/dashboard';
 
-const API_BASE_URL = 'http://localhost:3010/api';
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 export const fetchDashboardData = async (
   boundaryLevelID: string,
@@ -16,7 +16,7 @@ export const fetchDashboardData = async (
     throw new Error('No authentication token found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/get-dashboard-report`, {
+  const response = await fetch(`${BASE_URL}/get-dashboard-report`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

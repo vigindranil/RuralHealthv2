@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
 import axios from 'axios';
 import Cookies from 'js-cookie';
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 export const getDataEntries = async () => {
     
@@ -23,7 +24,7 @@ export const getDataEntries = async () => {
     };
 
     const response = await fetch(
-      "http://localhost:3010/api/get-all-hm-type",
+      `${BASE_URL}/get-all-hm-type`,
       requestOptions
     );
 
@@ -70,7 +71,7 @@ export interface MatriMaPayload {
 export async function saveMatriMa(info: MatriMaPayload) {
   const token = Cookies.get('authToken') ?? '';
   const { data } = await axios.post(
-    'http://localhost:3010/api/save-matrima-related-info',
+    `${BASE_URL}/save-matrima-related-info`,
     info,
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -106,7 +107,7 @@ export interface ApiResponseRecord {
 
 
 export const getRawUnderageMarriageData = async (params: ApiParams): Promise<ApiResponseRecord[]> => {
-  const API_URL = 'http://localhost:3010/api/get-matrima-related-info';
+  const API_URL = `${BASE_URL}/get-matrima-related-info`;
   const token = Cookies.get('authToken');
 
   const response = await fetch(API_URL, {
@@ -130,4 +131,48 @@ export const getRawUnderageMarriageData = async (params: ApiParams): Promise<Api
   
   
   return result.data.records;
+};
+
+
+
+export interface GpProfilePayload {
+  GPID: string | number;
+  GPAddress: string;
+  ProdhanName: string;
+  ProdhanContactNo: string;
+  SecretaryName: string;
+  SecretaryContactNo: string;
+  ExecutiveOfficerName: string;
+  ExecutiveOfficerContactNo: string;
+  TotalPopulationQty: number | string;
+  MalePopulationQty: number | string;
+  FemalePopulationQty: number | string;
+  TotalICDSCentresQty: number | string;
+  TotalHealthCentresQty: number | string;
+  EntryUserID: string | number;
+}
+
+export const saveGpProfile = async (payload: GpProfilePayload) => {
+  const token = Cookies.get('authToken');
+
+  if (!token) {
+    throw new Error('Authentication token not found.');
+  }
+
+  const response = await fetch(`${BASE_URL}/save-gp-profile`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    // Try to get a meaningful error message from the backend
+    const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred.' }));
+    throw new Error(errorData.message || `API Error: ${response.statusText}`);
+  }
+
+  return await response.json(); // Return the response data from the server
 };
