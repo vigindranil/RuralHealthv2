@@ -1,11 +1,12 @@
 import Cookies from "js-cookie";
-import { decodeJwtToken } from "../utils/decodetoken";
 
-export const getAllHealthandIcdsCentres = async () => {
+export const boundaryDetailsByBoundaryId = async (
+  boundaryLevelId: string,
+  boundaryId: string,
+  loginUserId: string
+) => {
+    
   const token = Cookies.get("authToken");
-  const decoded = decodeJwtToken(token);
-  const BoundaryLevelID = decoded?.BoundaryLevelID;
-  const BoundaryID = decoded?.BoundaryID;
 
   try {
     const myHeaders = new Headers();
@@ -13,8 +14,10 @@ export const getAllHealthandIcdsCentres = async () => {
     myHeaders.append("Authorization", `Bearer ${token}`);
 
     const raw = JSON.stringify({
-      BoundaryLevelID: BoundaryLevelID,
-      BoundaryID: BoundaryID,
+      BoundaryLevelID: boundaryLevelId,
+      BoundaryID: boundaryId,
+      IsUrban: "0",
+      LoginUserID: loginUserId,
     });
 
     const requestOptions: RequestInit = {
@@ -25,7 +28,7 @@ export const getAllHealthandIcdsCentres = async () => {
     };
 
     const response = await fetch(
-      "http://localhost:3010/api/get-health-and-icds-centre",
+      "http://localhost:3010/api/get-boundary-details-by-boundary-id",
       requestOptions
     );
 
@@ -41,4 +44,3 @@ export const getAllHealthandIcdsCentres = async () => {
     return null;
   }
 };
-

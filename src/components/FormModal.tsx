@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Phone, MapPin, Building } from 'lucide-react';
 import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
-import { getAllHealthCentres, getAllIcdsCentres } from '../api/dropDownData';
 import { saveMatriMa } from '../api/dataEntry';
 import SearchableSelect from './SearchableSelect';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { decodeJwtToken } from '../utils/decodetoken';
+import { getAllHealthandIcdsCentres } from '../api/dropDownData';
+
+
 
 
 interface FormModalProps {
@@ -326,51 +328,34 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
 
   useEffect(() => {
-    let isMounted = true;
-
-
     async function fetchDropdownData() {
-      setDropdownError(null); // Reset error on open
-
-
+      setDropdownError(null);
       try {
-        // Fetch ICDS Centres
-        const icdsData = await getAllIcdsCentres();
-        if (isMounted) {
-          if (icdsData && Array.isArray(icdsData.data)) {
-            setIcdsCentres(
-              icdsData.data.map((item: any) => ({
+        const data = await getAllHealthandIcdsCentres();
+        if (data && Array.isArray(data.data.healthCentres) && Array.isArray(data.data.icdsCentres)) {
+
+          // ICDS Centres
+          setIcdsCentres(
+            data.data.icdsCentres
+              .map((item: any) => ({
                 name: item.ICDSCentreName || item.name || "Unknown ICDS",
                 id: String(item.ICDSCentreID ?? ""),
                 healthCentreId: String(item.HealthCentreID ?? "")
               }))
-            );
-          } else {
-            setDropdownError("Failed to load ICDS Centres.");
-          }
-        }
-      } catch (err) {
-        if (isMounted) setDropdownError("Error loading ICDS Centres.");
-      }
-
-
-      try {
-        // Fetch Health Centres
-        const healthData = await getAllHealthCentres();
-        if (isMounted) {
-          if (healthData && Array.isArray(healthData.data)) {
-            setHealthCentres(
-              healthData.data.map((item: any) => ({
+          );
+          // Health Centres
+          setHealthCentres(
+            data.data.healthCentres
+              .map((item: any) => ({
                 name: item.HealthCentreName || "Unknown Health Centre",
                 id: String(item.HealthCentreID ?? "")
               }))
-            );
-          } else {
-            setDropdownError("Failed to load Health Centres.");
-          }
+          );
+        } else {
+          setDropdownError("Failed to load centres.");
         }
       } catch (err) {
-        if (isMounted) setDropdownError("Error loading Health Centres.");
+        setDropdownError("Error loading centres.");
       }
     }
 
@@ -378,16 +363,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     if (isOpen) {
       fetchDropdownData();
     }
-
-
-    return () => {
-      isMounted = false;
-    };
   }, [isOpen]);
 
-
-  console.log("healthCneter", healthCentres);
-  console.log("icdscenter", icdsCentres);
 
 
   if (!isOpen || !moduleId) return null;
@@ -509,7 +486,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
           </button>
         </div>
 
-
         {/* Form Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -521,7 +497,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                     <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-2">
                       {field.label} {field.required && <span className="text-red-500">*</span>}
                     </label>
-
 
                     {field.type === 'select' ? (
                       <SearchableSelect
@@ -548,6 +523,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                       />
                     ) : (
+                      // This is the single, correct "else" block for all other input types
                       <div className="relative">
                         {field.icon && (
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -570,7 +546,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                   </div>
                 ))}
             </div>
-
 
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Plus, Save, X, Building } from "lucide-react";
+import { FileText, Plus, Save, X, Building, User } from "lucide-react";
 import FormModal from "../components/FormModal";
 import { useNavigate } from "react-router-dom";
 import { getDataEntries } from "../api/dataEntry";
@@ -162,7 +162,33 @@ export default function DataEntry() {
             Enter or update details for your Health Centre.
           </p>
         </div>
+
+
+       {role === "GPAdmin" && <div
+          onClick={() => navigate("/gp-profile")}
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="text-3xl">
+              <User className="w-8 h-8 text-yellow-500" />
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+               Profile
+              </span>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Edit Your GP Profile
+          </h3>
+          <p className="text-gray-600 text-sm">
+            Enter or update details your GP profile
+          </p>
+        </div>}
+      
       </div>
+
+      
 
       {/* Form Modal */}
       <FormModal
