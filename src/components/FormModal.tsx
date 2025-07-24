@@ -4,8 +4,9 @@ import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (re
 import { getAllHealthCentres, getAllIcdsCentres } from '../api/dropDownData';
 import { saveMatriMa } from '../api/dataEntry';
 import SearchableSelect from './SearchableSelect';
-
-
+import Cookies from 'js-cookie';
+import axios from 'axios';
+import { decodeJwtToken } from '../utils/decodetoken';
 
 
 interface FormModalProps {
@@ -13,6 +14,7 @@ interface FormModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 
 // Mapping from API HMTypeID (as string) to config keys
 const ID_TO_CONFIG_MAP: Record<string, string> = {
@@ -31,6 +33,7 @@ const ID_TO_CONFIG_MAP: Record<string, string> = {
   // Add 'toilet-facilities' if it gets an ID from API
 };
 
+
 // Configs extracted outside for performance (content unchanged)
 const MODULE_CONFIGS: Record<string, any> = {
   'underage-marriage': {
@@ -42,10 +45,10 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
-      { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
-      { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
+      { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreId', label: 'Health Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
     ]
   },
@@ -59,10 +62,10 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
-      { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
-      { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
+      { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreId', label: 'Health Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
     ]
   },
@@ -78,7 +81,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -98,7 +101,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -115,7 +118,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -132,7 +135,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -149,7 +152,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -163,14 +166,14 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childName', label: 'Child Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'age', label: 'Age', type: 'number', required: true },
+      { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
       { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -184,14 +187,14 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childName', label: 'Child Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'age', label: 'Age', type: 'number', required: true },
+      { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
       { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -202,14 +205,14 @@ const MODULE_CONFIGS: Record<string, any> = {
     title: 'Adolescent Girls who are Anemic',
     fields: [
       { id: 'name', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'age', label: 'Age', type: 'number', required: true },
+      { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
       { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherHusbandName', label: "Father's/Husband's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -225,7 +228,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
       { id: 'healthCentreName', label: 'Health Centre Name', type: 'select', options: ['Jalpaiguri PHC', 'Belakoba PHC'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -240,7 +243,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'phoneNumber', label: 'Phone Number', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
+      { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'nikshayMitra', label: 'Ni-kshay Mitra', type: 'select', options: ['Yes', 'No'], required: true },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
       { id: 'icdsCentreId', label: 'ICDS Centre ID', type: 'text', required: true, readOnly: true, icon: <Building className="w-4 h-4" /> },
@@ -262,6 +265,7 @@ const MODULE_CONFIGS: Record<string, any> = {
   }
 };
 
+
 export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps) {
   // Use hardcoded user from utils (no context) - fallback to GP for demo if null
   const user = getUser() || {
@@ -274,10 +278,15 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const [icdsCentres, setIcdsCentres] = useState<{ name: string; id: string }[]>([]);
   const [healthCentres, setHealthCentres] = useState<{ name: string; id: string }[]>([]);
   const [dropdownError, setDropdownError] = useState<string | null>(null);
+  const token = Cookies.get('authToken');
+  const decoded = decodeJwtToken(token);
+  const GPID = decoded?.BoundaryID || '0'; // Fallback to '0' if not found
+
 
   // Normalize moduleId using the map
   const normalizedId = moduleId ? ID_TO_CONFIG_MAP[moduleId] || moduleId : null;
   const config = normalizedId ? MODULE_CONFIGS[normalizedId] || { title: 'Unknown Module', fields: [] } : { title: 'Unknown Module', fields: [] };
+
 
   const ICDS_CENTRES = [
     { name: 'ICDS-1', id: 'ICDS001' },
@@ -289,6 +298,11 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     { name: 'Belakoba PHC', id: 'HC002' },
   ];
 
+
+  // IDs that should never be rendered as visible controls
+  const HIDDEN_FIELD_IDS = ['icdsCentreId', 'healthCentreId'];
+
+
   const defaultValues = React.useMemo(() => {
     if (!normalizedId) return {};
     const cfg = MODULE_CONFIGS[normalizedId];
@@ -298,6 +312,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       return acc;
     }, {});
   }, [normalizedId]);
+
 
   useEffect(() => {
     if (isOpen) {
@@ -310,13 +325,13 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   }, [isOpen, defaultValues]);
 
 
-  // INSERT_YOUR_CODE
-
   useEffect(() => {
     let isMounted = true;
 
+
     async function fetchDropdownData() {
       setDropdownError(null); // Reset error on open
+
 
       try {
         // Fetch ICDS Centres
@@ -326,8 +341,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
             setIcdsCentres(
               icdsData.data.map((item: any) => ({
                 name: item.ICDSCentreName || item.name || "Unknown ICDS",
-                id: item.ICDSCentreID || item.id || "",
-                healthCentreId: item.HealthCentreID || item.id || "",
+                id: String(item.ICDSCentreID ?? ""),
+                healthCentreId: String(item.HealthCentreID ?? "")
               }))
             );
           } else {
@@ -338,6 +353,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         if (isMounted) setDropdownError("Error loading ICDS Centres.");
       }
 
+
       try {
         // Fetch Health Centres
         const healthData = await getAllHealthCentres();
@@ -346,7 +362,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
             setHealthCentres(
               healthData.data.map((item: any) => ({
                 name: item.HealthCentreName || "Unknown Health Centre",
-                id: item.HealthCentreID || "",
+                id: String(item.HealthCentreID ?? "")
               }))
             );
           } else {
@@ -358,9 +374,11 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       }
     }
 
+
     if (isOpen) {
       fetchDropdownData();
     }
+
 
     return () => {
       isMounted = false;
@@ -368,73 +386,114 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   }, [isOpen]);
 
 
-
   console.log("healthCneter", healthCentres);
   console.log("icdscenter", icdsCentres);
 
 
-
-
-
-
-
   if (!isOpen || !moduleId) return null;
 
+
   const handleSubmit = async (e: React.FormEvent) => {
+    const orZero = (v?: unknown) => {
+      if (v === undefined || v === null || v === '') return '0';
+      const s = String(v).trim();
+      return s ? s : '0';
+    };
+    const orEmpty = (v?: string) => (v?.trim() ? v : '');
     e.preventDefault();
     setLoading(true);
-
-    // helpers: convert “undefined / blank” ➜ "0" (for IDs & numbers) or "" (for text)
-    const orZero = (v?: string) => (v?.trim() ? v : '0');
-    const orEmpty = (v?: string) => (v?.trim() ? v : '');
-
-    const payload = {
-      MatriMaRelatedInfoID: '0',
-      DistrictID: '0',
-      BlockID: '0',
-      GPID: '0',
-      VillageName: orEmpty(formData.villageName),
-      HealthCentreID: orZero(formData.healthCentreId),
-      ICDSCentreID: orZero(formData.icdsCentreId),
-      HMTypeID: moduleId ?? '0',          // tells the API which module
-      MatriMaID: orZero(formData.motherMaId),
-      MotherName: orEmpty(formData.motherName),
-      MotherContactNo: orZero(formData.phoneNumber),
-      FatherName: orEmpty(formData.fatherName),
-      FatherContactNo: orZero(formData.fatherContactNo),
-      HusbandName: orEmpty(formData.husbandName),
-      HusbandContactNo: orZero(formData.husbandContactNo),
-      ChildName: orEmpty(formData.childName),
-      ChildID: orZero(formData.childId),
-      ChildDOB: orEmpty(formData.childDob),   // fill if you collect it
-      ChildWeight: orZero(formData.weight),
-      EntryUserID: user.id,
-    } as const;
-
     try {
+      console.log('Submitting form with data:', formData);
+
+
+      const payload = {
+        MatriMaRelatedInfoID: '0',
+        DistrictID: '0',
+        BlockID: '0',
+        GPID: GPID,
+        VillageName: orEmpty(formData.villageName),
+        HealthCentreID: orZero(formData.healthCentreId),
+        ICDSCentreID: orZero(formData.icdsCentreId),
+        SubDivisionID: '0',
+        MunicipalityID: '0',
+        IsUrban: '0',
+        HMTypeID: moduleId,
+        ContactNo: orZero(formData.contactNo),
+        MatriMaID: orZero(formData.motherMaId),
+        MotherName: orEmpty(formData.motherName),
+        FatherName: orEmpty(formData.fatherName),
+        HusbandName: orEmpty(formData.husbandName),
+        ChildName: orEmpty(formData.childName),
+        ChildID: orZero(formData.childId),
+        ChildDOB: orEmpty(formData.childDob) || null,
+        ChildWeight: orZero(formData.weight),
+        EntryUserID: user.id,
+      };
+
+
+      console.log('Payload:', payload);
+
+
       const res = await saveMatriMa(payload);
+      console.log('API response:', res);
+
+
       alert(res.message ?? 'Data submitted successfully.');
       onClose();
-    } catch {
-      alert('Error submitting data. Please try again.');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error('Axios error - message:', err.message);          // e.g. “Network Error” or “Request failed with status 400”
+        console.error('Axios error - config :', err.config);           // request details
+        console.error('Axios error - status :', err.response?.status); // HTTP status (if any)
+        console.error('Axios error - data   :', err.response?.data);   // server payload (validation message, etc.)
+      } else {
+        console.error('Unknown error:', err);
+      }
+
+
+      alert('Error submitting data. Check console for details.');
     } finally {
       setLoading(false);
+      console.log('Loading state reset');
     }
   };
+
 
   const handleInputChange = (fieldId: string, value: string) => {
     setFormData(prev => {
       if (fieldId === 'icdsCentreName') {
-        const found = ICDS_CENTRES.find(c => c.name === value);
-        return { ...prev, icdsCentreName: value, icdsCentreId: found ? found.id : '' };
+        const found =
+          icdsCentres.find(c => c.name === value) ||
+          ICDS_CENTRES.find(c => c.name === value);
+
+
+        return {
+          ...prev,
+          icdsCentreName: value,
+          icdsCentreId: found ? String(found.id) : ''
+        };
       }
+
+
+      /* ---------- Health centre ---------- */
       if (fieldId === 'healthCentreName') {
-        const found = HEALTH_CENTRES.find(c => c.name === value);
-        return { ...prev, healthCentreName: value, healthCentreId: found ? found.id : '' };
+        const found =
+          healthCentres.find(c => c.name === value) ||
+          HEALTH_CENTRES.find(c => c.name === value);
+
+
+        return {
+          ...prev,
+          healthCentreName: value,
+          healthCentreId: found ? String(found.id) : ''
+        };
       }
+
+
       return { ...prev, [fieldId]: value };
     });
   };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -450,64 +509,68 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
           </button>
         </div>
 
+
         {/* Form Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {config.fields.map((field: any) => (
-                <div key={field.id} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                  <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-2">
-                    {field.label} {field.required && <span className="text-red-500">*</span>}
-                  </label>
+              {config.fields
+                .filter((field: any) => !HIDDEN_FIELD_IDS.includes(field.id))
+                .map((field: any) => (
+                  <div key={field.id} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                    <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    </label>
 
-                  {field.type === 'select' ? (
-                    <SearchableSelect
-                      value={formData[field.id] || ''}
-                      onChange={(val) => handleInputChange(field.id, val)}
-                      options={
-                        field.id === 'icdsCentreName'
-                          ? (icdsCentres.length ? icdsCentres : ICDS_CENTRES)
-                          : field.id === 'healthCentreName'
-                            ? (healthCentres.length ? healthCentres : HEALTH_CENTRES)
-                            : (field.options || []).map((o: string) => ({ id: o, name: o }))
-                      }
-                      placeholder={`Select ${field.label}`}
-                      disabled={field.readOnly}
-                    />
-                  ) : field.type === 'textarea' ? (
-                    <textarea
-                      id={field.id}
-                      required={field.required}
-                      value={formData[field.id] || field.defaultValue || ''}
-                      onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={`Enter ${field.label.toLowerCase()}`}
-                    />
-                  ) : (
-                    <div className="relative">
-                      {field.icon && (
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                          {field.icon}
-                        </div>
-                      )}
-                      <input
+
+                    {field.type === 'select' ? (
+                      <SearchableSelect
+                        value={formData[field.id] || ''}
+                        onChange={(val) => handleInputChange(field.id, val)}
+                        options={
+                          field.id === 'icdsCentreName'
+                            ? (icdsCentres.length ? icdsCentres : ICDS_CENTRES)
+                            : field.id === 'healthCentreName'
+                              ? (healthCentres.length ? healthCentres : HEALTH_CENTRES)
+                              : (field.options || []).map((o: string) => ({ id: o, name: o }))
+                        }
+                        placeholder={`Select ${field.label}`}
+                        disabled={field.readOnly}
+                      />
+                    ) : field.type === 'textarea' ? (
+                      <textarea
                         id={field.id}
-                        type={field.type}
-                        step={field.step}
                         required={field.required}
                         value={formData[field.id] || field.defaultValue || ''}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'
-                          }`}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder={`Enter ${field.label.toLowerCase()}`}
-                        disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
                       />
-                    </div>
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      <div className="relative">
+                        {field.icon && (
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            {field.icon}
+                          </div>
+                        )}
+                        <input
+                          id={field.id}
+                          type={field.type}
+                          step={field.step}
+                          required={field.required}
+                          value={formData[field.id] || field.defaultValue || ''}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                          disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
+
 
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">

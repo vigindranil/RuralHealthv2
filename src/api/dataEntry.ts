@@ -47,6 +47,9 @@ export interface MatriMaPayload {
   GPID: string;
   VillageName: string;
   HealthCentreID: string;
+  SubDivisionID: string;   // NEW
+  MunicipalityID: string;  // NEW
+  IsUrban: string;         // NEW  "0" = rural, "1" = urban
   ICDSCentreID: string;
   HMTypeID: string;
   MatriMaID: string;
