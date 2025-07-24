@@ -167,7 +167,7 @@ export default function Dashboard() {
 
           setDashboardData(response.data);
         }
-      } catch (error) {}
+      } catch (error) { }
     }
 
     fetchData();
@@ -238,11 +238,12 @@ export default function Dashboard() {
   const isHealth = user?.role === "Health Centre";
   const isDistrict = user?.role === "District Admin";
 
+
   // Get health indicators from API response
   const getIndicatorByTitle = (title: string) => {
     return (
       dashboardData.healthIndicators.find(
-        (indicator) => indicator.title === title
+        (indicator) => indicator.title.trim() === title.trim()
       ) || { count: 0, change: 0 }
     );
   };
@@ -259,14 +260,27 @@ export default function Dashboard() {
     "Underweight Children": "underweight-children",
   };
 
+  // Map clean UI titles to the exact titles from the API response
+  const apiTitleMap: Record<string, string> = {
+    "Under Age Marriages": "Marriages -  Under Age",
+    "Low Birth Weight Children": "Children with low birth weight",
+    "Malnourished Children": "Malnourished Children",
+    "High Risk Pregnancies": "Pregnant women with high-risk pregnancy",
+    "Infectious Diseases": "Infectious diseases in last one month",
+    "TB & Leprosy Patients": "TB and leprosy patients",
+    "Anemic Adolescent Girls": "Adolescent Girls who are Anemic",
+    "Underweight Children": "Severely Underweight children",
+  };
+
+
   // Create stats from API data
   const stats = [
     {
       title: "Under Age Marriages",
-      value: getIndicatorByTitle("Under Age Marriages").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).count.toString(),
       change:
-        getIndicatorByTitle("Under Age Marriages").change > 0
-          ? `+${getIndicatorByTitle("Under Age Marriages").change}`
+        getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Users className="w-6 h-6" />,
@@ -274,10 +288,10 @@ export default function Dashboard() {
     },
     {
       title: "Low Birth Weight Children",
-      value: getIndicatorByTitle("Low Birth Weight Children").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).count.toString(),
       change:
-        getIndicatorByTitle("Low Birth Weight Children").change > 0
-          ? `+${getIndicatorByTitle("Low Birth Weight Children").change}`
+        getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Baby className="w-6 h-6" />,
@@ -285,10 +299,10 @@ export default function Dashboard() {
     },
     {
       title: "Malnourished Children",
-      value: getIndicatorByTitle("Malnourished Children").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Malnourished Children"]).count.toString(),
       change:
-        getIndicatorByTitle("Malnourished Children").change > 0
-          ? `+${getIndicatorByTitle("Malnourished Children").change}`
+        getIndicatorByTitle(apiTitleMap["Malnourished Children"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Malnourished Children"]).change}`
           : "0",
       trending: "up" as const,
       icon: <AlertTriangle className="w-6 h-6" />,
@@ -296,10 +310,10 @@ export default function Dashboard() {
     },
     {
       title: "High Risk Pregnancies",
-      value: getIndicatorByTitle("High Risk Pregnancies").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).count.toString(),
       change:
-        getIndicatorByTitle("High Risk Pregnancies").change > 0
-          ? `+${getIndicatorByTitle("High Risk Pregnancies").change}`
+        getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Heart className="w-6 h-6" />,
@@ -311,10 +325,10 @@ export default function Dashboard() {
   const additionalStats = [
     {
       title: "Infectious Diseases",
-      value: getIndicatorByTitle("Infectious Diseases").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).count.toString(),
       change:
-        getIndicatorByTitle("Infectious Diseases").change > 0
-          ? `+${getIndicatorByTitle("Infectious Diseases").change}`
+        getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Activity className="w-6 h-6" />,
@@ -322,10 +336,10 @@ export default function Dashboard() {
     },
     {
       title: "TB & Leprosy Patients",
-      value: getIndicatorByTitle("TB & Leprosy Patients").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).count.toString(),
       change:
-        getIndicatorByTitle("TB & Leprosy Patients").change > 0
-          ? `+${getIndicatorByTitle("TB & Leprosy Patients").change}`
+        getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Shield className="w-6 h-6" />,
@@ -333,10 +347,10 @@ export default function Dashboard() {
     },
     {
       title: "Anemic Adolescent Girls",
-      value: getIndicatorByTitle("Anemic Adolescent Girls").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).count.toString(),
       change:
-        getIndicatorByTitle("Anemic Adolescent Girls").change > 0
-          ? `+${getIndicatorByTitle("Anemic Adolescent Girls").change}`
+        getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).change}`
           : "0",
       trending: "up" as const,
       icon: <Users className="w-6 h-6" />,
@@ -344,10 +358,10 @@ export default function Dashboard() {
     },
     {
       title: "Underweight Children",
-      value: getIndicatorByTitle("Underweight Children").count.toString(),
+      value: getIndicatorByTitle(apiTitleMap["Underweight Children"]).count.toString(),
       change:
-        getIndicatorByTitle("Underweight Children").change > 0
-          ? `+${getIndicatorByTitle("Underweight Children").change}`
+        getIndicatorByTitle(apiTitleMap["Underweight Children"]).change > 0
+          ? `+${getIndicatorByTitle(apiTitleMap["Underweight Children"]).change}`
           : "0",
       trending: "up" as const,
       icon: <AlertTriangle className="w-6 h-6" />,
@@ -394,7 +408,7 @@ export default function Dashboard() {
                   ) {
                     try {
 
-              
+
                       const data = await boundaryDetailsByBoundaryId(
                         String(blockObj.InnerBoundaryLevelID),
                         String(blockObj.InnerBoundaryID),
@@ -405,7 +419,7 @@ export default function Dashboard() {
                       console.error("Failed to fetch boundary details:", err);
                     }
                   }
-                  else{
+                  else {
 
                     setBoundarySubDetails([]);
 
@@ -421,7 +435,7 @@ export default function Dashboard() {
                   All Block
                 </option>
 
-                
+
                 {boundaryDetails?.map((block: any) => (
                   <option
                     key={block.InnerBoundaryID}
@@ -719,7 +733,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
           {/* Quick Actions */}
           {user?.role === "GP" && (
             <div className="bg-white rounded-xl shadow-sm p-6">
