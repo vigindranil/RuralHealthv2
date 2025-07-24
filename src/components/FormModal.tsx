@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, User, Phone, MapPin, Building } from 'lucide-react';
 import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import { addEntry } from '../utils/dataUtils'; // Import hardcoded data utils (replaces DataContext)
+import { getAllHealthCentres, getAllIcdsCentres } from '../api/dropDownData';
+
+
+
 
 interface FormModalProps {
   moduleId: string | null;
@@ -265,6 +269,10 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   };
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  // State for fetched dropdown data
+  const [icdsCentres, setIcdsCentres] = useState<{ name: string; id: string }[]>([]);
+  const [healthCentres, setHealthCentres] = useState<{ name: string; id: string }[]>([]);
+  const [dropdownError, setDropdownError] = useState<string | null>(null);
 
   // Normalize moduleId using the map
   const normalizedId = moduleId ? ID_TO_CONFIG_MAP[moduleId] || moduleId : null;
@@ -299,6 +307,75 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       setFormData({});
     }
   }, [isOpen, defaultValues]);
+
+
+  // INSERT_YOUR_CODE
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchDropdownData() {
+      setDropdownError(null); // Reset error on open
+
+      try {
+        // Fetch ICDS Centres
+        const icdsData = await getAllIcdsCentres();
+        if (isMounted) {
+          if (icdsData && Array.isArray(icdsData.data)) {
+            setIcdsCentres(
+              icdsData.data.map((item: any) => ({
+                name: item.ICDSCentreName || item.name || "Unknown ICDS",
+                id: item.ICDSCentreID || item.id || "",
+                healthCentreId: item.HealthCentreID || item.id || "",
+              }))
+            );
+          } else {
+            setDropdownError("Failed to load ICDS Centres.");
+          }
+        }
+      } catch (err) {
+        if (isMounted) setDropdownError("Error loading ICDS Centres.");
+      }
+
+      try {
+        // Fetch Health Centres
+        const healthData = await getAllHealthCentres();
+        if (isMounted) {
+          if (healthData && Array.isArray(healthData.data)) {
+            setHealthCentres(
+              healthData.data.map((item: any) => ({
+                name: item.HealthCentreName || "Unknown Health Centre",
+                id: item.HealthCentreID || "",
+              }))
+            );
+          } else {
+            setDropdownError("Failed to load Health Centres.");
+          }
+        }
+      } catch (err) {
+        if (isMounted) setDropdownError("Error loading Health Centres.");
+      }
+    }
+
+    if (isOpen) {
+      fetchDropdownData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+
+
+  console.log("healthCneter", healthCentres);
+  console.log("icdscenter" , icdsCentres);
+
+
+
+
+
+
 
   if (!isOpen || !moduleId) return null;
 
@@ -372,9 +449,27 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select {field.label}</option>
-                      {field.options?.map((option: string) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
+                      {(() => {
+                        // Dynamically use dropdown data for ICDS/Health Centre fields
+                        if (field.id === 'icdsCentreName') {
+                          // Use fetched ICDS centres if available, else fallback to static
+                          const centres = icdsCentres.length > 0 ? icdsCentres : ICDS_CENTRES;
+                          return centres.map((centre) => (
+                            <option key={centre.id} value={centre.name}>{centre.name}</option>
+                          ));
+                        }
+                        if (field.id === 'healthCentreName') {
+                          // Use fetched Health centres if available, else fallback to static
+                          const centres = healthCentres.length > 0 ? healthCentres : HEALTH_CENTRES;
+                          return centres.map((centre) => (
+                            <option key={centre.id} value={centre.name}>{centre.name}</option>
+                          ));
+                        }
+                        // Default: use static options from config
+                        return field.options?.map((option: string) => (
+                          <option key={option} value={option}>{option}</option>
+                        ));
+                      })()}
                     </select>
                   ) : field.type === 'textarea' ? (
                     <textarea
