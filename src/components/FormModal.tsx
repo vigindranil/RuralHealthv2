@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Phone, MapPin, Building } from 'lucide-react';
 import { getUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
-import { addEntry } from '../utils/dataUtils'; // Import hardcoded data utils (replaces DataContext)
 import { getAllHealthCentres, getAllIcdsCentres } from '../api/dropDownData';
+import { saveMatriMa } from '../api/dataEntry';
+import SearchableSelect from './SearchableSelect';
 
 
 
@@ -369,7 +370,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
 
   console.log("healthCneter", healthCentres);
-  console.log("icdscenter" , icdsCentres);
+  console.log("icdscenter", icdsCentres);
 
 
 
@@ -383,19 +384,38 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     e.preventDefault();
     setLoading(true);
 
+    // helpers: convert “undefined / blank” ➜ "0" (for IDs & numbers) or "" (for text)
+    const orZero = (v?: string) => (v?.trim() ? v : '0');
+    const orEmpty = (v?: string) => (v?.trim() ? v : '');
+
+    const payload = {
+      MatriMaRelatedInfoID: '0',
+      DistrictID: '0',
+      BlockID: '0',
+      GPID: '0',
+      VillageName: orEmpty(formData.villageName),
+      HealthCentreID: orZero(formData.healthCentreId),
+      ICDSCentreID: orZero(formData.icdsCentreId),
+      HMTypeID: moduleId ?? '0',          // tells the API which module
+      MatriMaID: orZero(formData.motherMaId),
+      MotherName: orEmpty(formData.motherName),
+      MotherContactNo: orZero(formData.phoneNumber),
+      FatherName: orEmpty(formData.fatherName),
+      FatherContactNo: orZero(formData.fatherContactNo),
+      HusbandName: orEmpty(formData.husbandName),
+      HusbandContactNo: orZero(formData.husbandContactNo),
+      ChildName: orEmpty(formData.childName),
+      ChildID: orZero(formData.childId),
+      ChildDOB: orEmpty(formData.childDob),   // fill if you collect it
+      ChildWeight: orZero(formData.weight),
+      EntryUserID: user.id,
+    } as const;
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Add entry using dataUtils (replaces DataContext)
-      if (user) {
-        addEntry(moduleId, formData, user.id);
-      }
-
-      alert('Data submitted successfully!');
+      const res = await saveMatriMa(payload);
+      alert(res.message ?? 'Data submitted successfully.');
       onClose();
-      setFormData({});
-    } catch (error) {
+    } catch {
       alert('Error submitting data. Please try again.');
     } finally {
       setLoading(false);
@@ -418,7 +438,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[100vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{config.title}</h2>
@@ -441,36 +461,19 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                   </label>
 
                   {field.type === 'select' ? (
-                    <select
-                      id={field.id}
-                      required={field.required}
-                      value={formData[field.id] || field.defaultValue || ''}
-                      onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select {field.label}</option>
-                      {(() => {
-                        // Dynamically use dropdown data for ICDS/Health Centre fields
-                        if (field.id === 'icdsCentreName') {
-                          // Use fetched ICDS centres if available, else fallback to static
-                          const centres = icdsCentres.length > 0 ? icdsCentres : ICDS_CENTRES;
-                          return centres.map((centre) => (
-                            <option key={centre.id} value={centre.name}>{centre.name}</option>
-                          ));
-                        }
-                        if (field.id === 'healthCentreName') {
-                          // Use fetched Health centres if available, else fallback to static
-                          const centres = healthCentres.length > 0 ? healthCentres : HEALTH_CENTRES;
-                          return centres.map((centre) => (
-                            <option key={centre.id} value={centre.name}>{centre.name}</option>
-                          ));
-                        }
-                        // Default: use static options from config
-                        return field.options?.map((option: string) => (
-                          <option key={option} value={option}>{option}</option>
-                        ));
-                      })()}
-                    </select>
+                    <SearchableSelect
+                      value={formData[field.id] || ''}
+                      onChange={(val) => handleInputChange(field.id, val)}
+                      options={
+                        field.id === 'icdsCentreName'
+                          ? (icdsCentres.length ? icdsCentres : ICDS_CENTRES)
+                          : field.id === 'healthCentreName'
+                            ? (healthCentres.length ? healthCentres : HEALTH_CENTRES)
+                            : (field.options || []).map((o: string) => ({ id: o, name: o }))
+                      }
+                      placeholder={`Select ${field.label}`}
+                      disabled={field.readOnly}
+                    />
                   ) : field.type === 'textarea' ? (
                     <textarea
                       id={field.id}

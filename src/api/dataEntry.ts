@@ -1,4 +1,6 @@
 import Cookies from "js-cookie";
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export const getDataEntries = async () => {
     
@@ -37,3 +39,37 @@ export const getDataEntries = async () => {
     return null;
   }
 };
+
+export interface MatriMaPayload {
+  MatriMaRelatedInfoID: string;
+  DistrictID: string;
+  BlockID: string;
+  GPID: string;
+  VillageName: string;
+  HealthCentreID: string;
+  ICDSCentreID: string;
+  HMTypeID: string;
+  MatriMaID: string;
+  MotherName: string;
+  MotherContactNo: string;
+  FatherName: string;
+  FatherContactNo: string;
+  HusbandName: string;
+  HusbandContactNo: string;
+  ChildName: string;
+  ChildID: string;
+  ChildDOB: string;        // ISO yyyy-MM-dd
+  ChildWeight: string;
+  EntryUserID: string;
+}
+
+/* POST and return the server message */
+export async function saveMatriMa(info: MatriMaPayload) {
+  const token = Cookies.get('authToken') ?? '';
+  const { data } = await axios.post(
+    'http://localhost:3010/api/save-matrima-related-info',
+    info,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data;    // { status, message, data: { … } }
+}

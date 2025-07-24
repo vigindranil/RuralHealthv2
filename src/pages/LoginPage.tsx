@@ -101,6 +101,8 @@ export default function LoginPage() {
       if (decoded) {
         // Store UserTypeID in cookies as required
         Cookies.set('userTypeID', decoded.UserTypeID.toString());
+        Cookies.set('boundaryID', decoded.BoundaryID.toString());
+        Cookies.set('boundaryLevelID', decoded.BoundaryLevelID.toString());
       }
       navigate('/dashboard');
     } else {
@@ -141,8 +143,8 @@ export default function LoginPage() {
                 key={role}
                 onClick={() => setFormData({ ...formData, role })}
                 className={`cursor-pointer p-6 rounded-xl transition-all duration-300 ${isSelected
-                    ? 'bg-white/20 border border-white/40 backdrop-blur-md'
-                    : 'bg-white/10 border border-white/20 hover:bg-white/15 backdrop-blur-sm'
+                  ? 'bg-white/20 border border-white/40 backdrop-blur-md'
+                  : 'bg-white/10 border border-white/20 hover:bg-white/15 backdrop-blur-sm'
                   }`}
               >
                 <div className="flex items-center space-x-4">
@@ -202,8 +204,8 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setFormData({ ...formData, role })}
                       className={`p-3 rounded-lg border-2 transition-all duration-200 ${formData.role === role
-                          ? `${config.color} text-white border-transparent`
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                        ? `${config.color} text-white border-transparent`
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         }`}
                     >
                       <div className="flex flex-col items-center space-y-2">
