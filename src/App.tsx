@@ -49,7 +49,7 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 
 function AppContent() {
   const [hasToken, setHasToken] = useState(!!Cookies.get("authToken"));
-  const location = useLocation(); 
+  const location = useLocation();
   console.log("Initial token check:", hasToken);
 
 
@@ -108,7 +108,7 @@ function AppContent() {
           }
         />
         <Route
-          path="/details/:moduleId"
+          path="/details/:moduleId/:id"
           element={
             <ProtectedRoute>
               <ModuleDetailPage />

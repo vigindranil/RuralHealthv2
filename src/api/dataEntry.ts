@@ -105,8 +105,7 @@ export interface ApiResponseRecord {
   healthCentreId: string;
 }
 
-
-export const getRawUnderageMarriageData = async (params: ApiParams): Promise<ApiResponseRecord[]> => {
+export const getRawUnderageMarriageData = async (params: ApiParams) => {
   const API_URL = `${BASE_URL}/get-matrima-related-info`;
   const token = Cookies.get('authToken');
 
@@ -125,14 +124,14 @@ export const getRawUnderageMarriageData = async (params: ApiParams): Promise<Api
 
   const result = await response.json();
 
-  if (result.status !== 0 || !result.data || !result.data.records) {
+  if (result.status !== 0) {
     throw new Error(result.message || "Failed to fetch valid data from the API.");
   }
   
-  
-  return result.data.records;
+  // Return the full result object instead of just records
+  // This allows the component to access title, district, duration, etc.
+  return result;
 };
-
 
 
 export interface GpProfilePayload {

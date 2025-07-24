@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Heart,
   Users,
@@ -21,25 +21,15 @@ import { DashboardResponse, User } from "../types/dashboard";
 import { getCurrentMonthDateRange } from "../utils/dateUtils";
 import { boundaryDetailsByBoundaryId } from "../api/boundaryDropDown";
 
-// Static block/GP data for filtering
-const BLOCKS = ["All", "Jalpaiguri Sadar", "Maynaguri"];
-const GPS: Record<string, string[]> = {
-  All: ["All"],
-  "Jalpaiguri Sadar": [
-    "All",
-    "Belakoba",
-    "Sannyasikata",
-    "Kharija Berubari",
-    "Kharia",
-    "Binnaguri",
-    "Baropatia Nutanabos",
-    "Patkata",
-    "Saptibari",
-    "Barnish",
-    "Kumargram",
-  ],
-  Maynaguri: ["All", "Maynaguri", "Barnish", "Saptibari"],
-};
+// Helper function to create a URL-friendly slug from a title
+const slugify = (text: string) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters but keep spaces and dashes
+    .replace(/\s+/g, "-") // Replace spaces with a single dash
+    .replace(/-+/g, "-"); // Replace multiple dashes with a single one
 
 export default function Dashboard() {
   const [user, setUser] = React.useState<User | null>(null);
@@ -55,12 +45,6 @@ export default function Dashboard() {
   const [boundaryDetails, setBoundaryDetails] = useState<any>(null);
   const [boundarySubDetails, setBoundarySubDetails] = useState<any>(null);
 
-  // Update GP list and reset selected GP when block changes
-  // React.useEffect(() => {
-  //   setSelectedGP(GPS[selectedBlock][0]);
-  // }, [selectedBlock]);
-
-  // Decode token and fetch dashboard data
   React.useEffect(() => {
     const initializeDashboard = async () => {
       setLoading(true);
@@ -118,8 +102,6 @@ export default function Dashboard() {
 
         setUser(userData);
 
-        // Fetch dashboard data
-
         try {
           const { fromDate, toDate } = getCurrentMonthDateRange();
 
@@ -167,24 +149,25 @@ export default function Dashboard() {
 
           setDashboardData(response.data);
         }
-      } catch (error) { }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        setError("Failed to load dashboard data. Please try again.");
+      }
     }
 
     fetchData();
-  }, [selectedGP]);
+  }, [selectedGP, user]);
 
-  // INSERT_YOUR_CODE
   useEffect(() => {
     if (user?.role === "District Admin") {
-      // INSERT_YOUR_CODE
       const fetchBoundaryDetails = async () => {
         if (!user) return;
         try {
           const token = Cookies.get("authToken");
           const decoded = decodeJwtToken(token);
           const data = await boundaryDetailsByBoundaryId(
-            String(decoded?.BoundaryID ?? ""),
             String(decoded?.BoundaryLevelID ?? ""),
+            String(decoded?.BoundaryID ?? ""),
             String(decoded?.UserID ?? "")
           );
           setBoundaryDetails(data?.data);
@@ -196,6 +179,26 @@ export default function Dashboard() {
       fetchBoundaryDetails();
     }
   }, [user]);
+
+  // Dynamically generate stats from the API response without any pre-configuration
+  const allStats = useMemo(() => {
+    if (!dashboardData?.healthIndicators) {
+      return [];
+    }
+
+    return dashboardData.healthIndicators.map((indicator) => {
+      return {
+        id: indicator.id,
+        title: indicator.title.trim(), // Use the title directly from the API
+        value: indicator.count.toString(),
+        change: indicator.change > 0 ? `+${indicator.change}` : "0",
+        trending: "up" as const, // Default trending direction
+        icon: <Activity className="w-6 h-6" />, // Use a generic icon for all cards
+        color: "blue" as const, // Use a generic color for all cards
+        moduleId: slugify(indicator.title), // Generate a moduleId from the title for navigation
+      };
+    });
+  }, [dashboardData]);
 
   if (loading) {
     return (
@@ -238,138 +241,6 @@ export default function Dashboard() {
   const isHealth = user?.role === "Health Centre";
   const isDistrict = user?.role === "District Admin";
 
-
-  // Get health indicators from API response
-  const getIndicatorByTitle = (title: string) => {
-    return (
-      dashboardData.healthIndicators.find(
-        (indicator) => indicator.title.trim() === title.trim()
-      ) || { count: 0, change: 0 }
-    );
-  };
-
-  // Map stat title to moduleId for navigation
-  const statModuleMap: Record<string, string> = {
-    "Under Age Marriages": "underage-marriage",
-    "Low Birth Weight Children": "low-birth-weight",
-    "Malnourished Children": "malnourished-children",
-    "High Risk Pregnancies": "high-risk-pregnancy",
-    "Infectious Diseases": "infectious-diseases",
-    "TB & Leprosy Patients": "tb-leprosy",
-    "Anemic Adolescent Girls": "anemic-girls",
-    "Underweight Children": "underweight-children",
-  };
-
-  // Map clean UI titles to the exact titles from the API response
-  const apiTitleMap: Record<string, string> = {
-    "Under Age Marriages": "Marriages -  Under Age",
-    "Low Birth Weight Children": "Children with low birth weight",
-    "Malnourished Children": "Malnourished Children",
-    "High Risk Pregnancies": "Pregnant women with high-risk pregnancy",
-    "Infectious Diseases": "Infectious diseases in last one month",
-    "TB & Leprosy Patients": "TB and leprosy patients",
-    "Anemic Adolescent Girls": "Adolescent Girls who are Anemic",
-    "Underweight Children": "Severely Underweight children",
-  };
-
-
-  // Create stats from API data
-  const stats = [
-    {
-      title: "Under Age Marriages",
-      value: getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Under Age Marriages"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Users className="w-6 h-6" />,
-      color: "red" as const,
-    },
-    {
-      title: "Low Birth Weight Children",
-      value: getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Low Birth Weight Children"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Baby className="w-6 h-6" />,
-      color: "purple" as const,
-    },
-    {
-      title: "Malnourished Children",
-      value: getIndicatorByTitle(apiTitleMap["Malnourished Children"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Malnourished Children"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Malnourished Children"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <AlertTriangle className="w-6 h-6" />,
-      color: "red" as const,
-    },
-    {
-      title: "High Risk Pregnancies",
-      value: getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["High Risk Pregnancies"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Heart className="w-6 h-6" />,
-      color: "purple" as const,
-    },
-  ];
-
-  // Additional stats for second row
-  const additionalStats = [
-    {
-      title: "Infectious Diseases",
-      value: getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Infectious Diseases"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Activity className="w-6 h-6" />,
-      color: "red" as const,
-    },
-    {
-      title: "TB & Leprosy Patients",
-      value: getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["TB & Leprosy Patients"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Shield className="w-6 h-6" />,
-      color: "blue" as const,
-    },
-    {
-      title: "Anemic Adolescent Girls",
-      value: getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Anemic Adolescent Girls"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <Users className="w-6 h-6" />,
-      color: "purple" as const,
-    },
-    {
-      title: "Underweight Children",
-      value: getIndicatorByTitle(apiTitleMap["Underweight Children"]).count.toString(),
-      change:
-        getIndicatorByTitle(apiTitleMap["Underweight Children"]).change > 0
-          ? `+${getIndicatorByTitle(apiTitleMap["Underweight Children"]).change}`
-          : "0",
-      trending: "up" as const,
-      icon: <AlertTriangle className="w-6 h-6" />,
-      color: "red" as const,
-    },
-  ];
-
-  // Get recent entries from API data
   const recentEntries = dashboardData.recentDataEntries || [];
 
   return (
@@ -390,7 +261,6 @@ export default function Dashboard() {
                   setSelectedBlock(selectedBlockValue);
                   setSelectedGP(null); // Make the GP blank after selecting block
 
-                  // Parse the selected block if it's a stringified object
                   let blockObj;
                   try {
                     blockObj = JSON.parse(selectedBlockValue);
@@ -407,8 +277,6 @@ export default function Dashboard() {
                     user
                   ) {
                     try {
-
-
                       const data = await boundaryDetailsByBoundaryId(
                         String(blockObj.InnerBoundaryLevelID),
                         String(blockObj.InnerBoundaryID),
@@ -418,11 +286,8 @@ export default function Dashboard() {
                     } catch (err) {
                       console.error("Failed to fetch boundary details:", err);
                     }
-                  }
-                  else {
-
+                  } else {
                     setBoundarySubDetails([]);
-
                   }
                 }}
                 className="border-2 border-blue-300 rounded-lg px-4 py-2 bg-white text-blue-900 font-semibold shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition-all min-w-[180px]"
@@ -434,7 +299,6 @@ export default function Dashboard() {
                 >
                   All Block
                 </option>
-
 
                 {boundaryDetails?.map((block: any) => (
                   <option
@@ -518,24 +382,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Primary Stats Grid */}
+      {/* Unified Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
+        {allStats.map((stat) => (
           <StatsCard
-            key={index}
+            key={stat.id}
             {...stat}
-            onClick={() => navigate(`/details/${statModuleMap[stat.title]}`)}
-          />
-        ))}
-      </div>
-
-      {/* Secondary Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {additionalStats.map((stat, index) => (
-          <StatsCard
-            key={index}
-            {...stat}
-            onClick={() => navigate(`/details/${statModuleMap[stat.title]}`)}
+            onClick={() => navigate(`/details/${stat.moduleId}/${stat.id}`)}
           />
         ))}
       </div>

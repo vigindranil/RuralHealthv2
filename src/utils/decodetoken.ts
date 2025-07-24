@@ -5,6 +5,7 @@ export interface DecodedPayload {
   UserTypeID: number;
   UserTypeName: string;
   Username: string;
+  BoundaryName: string;
   BoundaryLevelID: number;
   UserFullName: string;
   BoundaryID: number;
