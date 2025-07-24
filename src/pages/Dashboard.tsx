@@ -1,14 +1,15 @@
 import React from 'react';
 import { Heart, Users, Baby, Shield, TrendingUp, AlertTriangle, FileText, Activity, Calendar, MapPin } from 'lucide-react';
-import { entries, getModuleStats, getTotalEntries } from '../utils/dataUtils'; // Kept for demo data (remove if not needed)
 import StatsCard from '../components/StatsCard';
 import ChartCard from '../components/ChartCard';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie'; // Standardized to js-cookie
+import Cookies from 'js-cookie';
 import { decodeJwtToken } from '../utils/decodetoken';
-import Navigation from '../components/Navigation';
+import { fetchDashboardData } from '../services/dashboardApi';
+import { DashboardResponse, User } from '../types/dashboard';
+import { getCurrentMonthDateRange } from '../utils/dateUtils';
 
-// Add static block/GP data at the top (after imports):
+// Static block/GP data for filtering
 const BLOCKS = ['All', 'Jalpaiguri Sadar', 'Maynaguri'];
 const GPS: Record<string, string[]> = {
   'All': ['All'],
@@ -17,11 +18,12 @@ const GPS: Record<string, string[]> = {
 };
 
 export default function Dashboard() {
-  // Initialize user as null (no getUser or fallback)
-  const [user, setUser] = React.useState<any>(null); // Type as any for flexibility; adjust as needed
+  const [user, setUser] = React.useState<User | null>(null);
+  const [dashboardData, setDashboardData] = React.useState<DashboardResponse['data'] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Default to 'All' since user might be null initially
   const [selectedBlock, setSelectedBlock] = React.useState('All');
   const [selectedGP, setSelectedGP] = React.useState(GPS[selectedBlock][0]);
 
@@ -30,21 +32,20 @@ export default function Dashboard() {
     setSelectedGP(GPS[selectedBlock][0]);
   }, [selectedBlock]);
 
-  // Decode token and update user state on mount
+  // Decode token and fetch dashboard data
   React.useEffect(() => {
+    const initializeDashboard = async () => {
+      setLoading(true);
+      setError(null);
+      
     const token = Cookies.get('authToken');
     if (!token) {
-      // Redirect to login if no token
       navigate('/');
       return;
     }
 
-    // console.log(token);
-
     const decoded = decodeJwtToken(token);
-    console.log('Decoded token:', decoded);
     if (decoded) {
-      // Map role based on UserTypeID or UserTypeName
       let mappedRole = 'GP'; // Default fallback
       if (decoded.UserTypeID === 150 || decoded.UserTypeName === 'DistrictAdmin') {
         mappedRole = 'District Admin';
@@ -54,15 +55,14 @@ export default function Dashboard() {
         mappedRole = 'Health Centre';
       }
 
-      // Map additional fields based on decoded token (demo mappings; adjust as needed)
       let block = 'Jalpaiguri Sadar';
       let gpName = 'Belakoba GP';
       let centreName = '';
-      let centreId = decoded.BoundaryID.toString(); // Use BoundaryID as centreId for ICDS/Health
+      let centreId = decoded.BoundaryID.toString();
 
       if (mappedRole === 'GP') {
-        block = 'Jalpaiguri Sadar'; // Example: map based on BoundaryLevelID/BoundaryID
-        gpName = `GP ${decoded.BoundaryID}`; // Example mapping
+        block = 'Jalpaiguri Sadar';
+        gpName = `GP ${decoded.BoundaryID}`;
       } else if (mappedRole === 'ICDS Centre') {
         centreName = `ICDS Centre ${decoded.BoundaryID}`;
       } else if (mappedRole === 'Health Centre') {
@@ -72,7 +72,7 @@ export default function Dashboard() {
         gpName = 'All';
       }
 
-      setUser({
+      const userData: User = {
         id: decoded.UserID.toString(),
         name: decoded.UserFullName,
         role: mappedRole,
@@ -81,68 +81,81 @@ export default function Dashboard() {
         gpName,
         centreName,
         centreId, // Added for filtering
-      });
+      };
+      
+      setUser(userData);
 
-      // Update selectedBlock/GP based on mapped values
       setSelectedBlock(block);
       setSelectedGP(gpName);
+      
+      // Fetch dashboard data
+      try {
+        const { fromDate, toDate } = getCurrentMonthDateRange();
+        const response = await fetchDashboardData(
+          decoded.BoundaryLevelID.toString(),
+          decoded.BoundaryID.toString(),
+          decoded.UserID.toString(),
+          fromDate,
+          toDate
+        );
+        setDashboardData(response.data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } else {
-      // Invalid token: clear cookies and redirect
       Cookies.remove('authToken');
       Cookies.remove('userTypeID');
       navigate('/');
     }
+      
+      setLoading(false);
+    };
+    
+    initializeDashboard();
   }, [navigate]);
 
-  // Loading state while decoding user
-  if (!user) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Role-based disables
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !dashboardData) {
+    return <div className="flex items-center justify-center min-h-screen">No data available</div>;
+  }
+
   const isGP = user?.role === 'GP';
   const isICDS = user?.role === 'ICDS Centre';
   const isHealth = user?.role === 'Health Centre';
   const isDistrict = user?.role === 'District Admin';
 
-  // Filter entries by role (using hardcoded entries from dataUtils)
-  let filteredEntries = entries;
-  if (isGP) {
-    filteredEntries = entries.filter(entry =>
-      (entry.data.block === user.block || !entry.data.block) &&
-      (entry.data.gramPanchayat === user.gpName || !entry.data.gramPanchayat)
-    );
-  } else if (isICDS) {
-    filteredEntries = entries.filter(entry =>
-      entry.data.icdsCentreName === user.centreName || entry.data.icdsCentreId === user.centreId
-    );
-  } else if (isHealth) {
-    filteredEntries = entries.filter(entry =>
-      entry.data.healthCentreName === user.centreName || entry.data.healthCentreId === user.centreId
-    );
-  } else if (isDistrict) {
-    filteredEntries = entries.filter(entry => {
-      const entryBlock = entry.data.block || user?.block;
-      const entryGP = entry.data.gramPanchayat || user?.gpName;
-      const blockMatch = selectedBlock === 'All' || entryBlock === selectedBlock;
-      const gpMatch = selectedGP === 'All' || entryGP === selectedGP;
-      return blockMatch && gpMatch;
-    });
-  }
-
-  // Use filteredEntries for stats, charts, etc. (using functions from dataUtils)
-  const moduleStats = getModuleStats();
-  const totalEntries = getTotalEntries();
-
-  // Only show data that can be entered through the portal
-  const underageMarriages = moduleStats['underage-marriage'] || 0;
-  const lowBirthWeight = moduleStats['low-birth-weight'] || 0;
-  const malnourished = moduleStats['malnourished-children'] || 0;
-  const highRiskPregnancy = moduleStats['high-risk-pregnancy'] || 0;
-  const infectiousDiseases = moduleStats['infectious-diseases'] || 0;
-  const tbLeprosy = moduleStats['tb-leprosy'] || 0;
-  const anemicGirls = moduleStats['anemic-girls'] || 0;
-  const underweightChildren = moduleStats['underweight-children'] || 0;
+  // Get health indicators from API response
+  const getIndicatorByTitle = (title: string) => {
+    return dashboardData.healthIndicators.find(indicator => indicator.title === title) || { count: 0, change: 0 };
+  };
 
   // Map stat title to moduleId for navigation
   const statModuleMap: Record<string, string> = {
@@ -156,35 +169,36 @@ export default function Dashboard() {
     'Underweight Children': 'underweight-children',
   };
 
+  // Create stats from API data
   const stats = [
     {
       title: "Under Age Marriages",
-      value: underageMarriages.toString(),
-      change: underageMarriages > 0 ? `+${underageMarriages}` : "0",
+      value: getIndicatorByTitle("Under Age Marriages").count.toString(),
+      change: getIndicatorByTitle("Under Age Marriages").change > 0 ? `+${getIndicatorByTitle("Under Age Marriages").change}` : "0",
       trending: "up" as const,
       icon: <Users className="w-6 h-6" />,
       color: "red" as const
     },
     {
       title: "Low Birth Weight Children",
-      value: lowBirthWeight.toString(),
-      change: lowBirthWeight > 0 ? `+${lowBirthWeight}` : "0",
+      value: getIndicatorByTitle("Low Birth Weight Children").count.toString(),
+      change: getIndicatorByTitle("Low Birth Weight Children").change > 0 ? `+${getIndicatorByTitle("Low Birth Weight Children").change}` : "0",
       trending: "up" as const,
       icon: <Baby className="w-6 h-6" />,
       color: "purple" as const
     },
     {
       title: "Malnourished Children",
-      value: malnourished.toString(),
-      change: malnourished > 0 ? `+${malnourished}` : "0",
+      value: getIndicatorByTitle("Malnourished Children").count.toString(),
+      change: getIndicatorByTitle("Malnourished Children").change > 0 ? `+${getIndicatorByTitle("Malnourished Children").change}` : "0",
       trending: "up" as const,
       icon: <AlertTriangle className="w-6 h-6" />,
       color: "red" as const
     },
     {
       title: "High Risk Pregnancies",
-      value: highRiskPregnancy.toString(),
-      change: highRiskPregnancy > 0 ? `+${highRiskPregnancy}` : "0",
+      value: getIndicatorByTitle("High Risk Pregnancies").count.toString(),
+      change: getIndicatorByTitle("High Risk Pregnancies").change > 0 ? `+${getIndicatorByTitle("High Risk Pregnancies").change}` : "0",
       trending: "up" as const,
       icon: <Heart className="w-6 h-6" />,
       color: "purple" as const
@@ -195,77 +209,40 @@ export default function Dashboard() {
   const additionalStats = [
     {
       title: "Infectious Diseases",
-      value: infectiousDiseases.toString(),
-      change: infectiousDiseases > 0 ? `+${infectiousDiseases}` : "0",
+      value: getIndicatorByTitle("Infectious Diseases").count.toString(),
+      change: getIndicatorByTitle("Infectious Diseases").change > 0 ? `+${getIndicatorByTitle("Infectious Diseases").change}` : "0",
       trending: "up" as const,
       icon: <Activity className="w-6 h-6" />,
       color: "red" as const
     },
     {
       title: "TB & Leprosy Patients",
-      value: tbLeprosy.toString(),
-      change: tbLeprosy > 0 ? `+${tbLeprosy}` : "0",
+      value: getIndicatorByTitle("TB & Leprosy Patients").count.toString(),
+      change: getIndicatorByTitle("TB & Leprosy Patients").change > 0 ? `+${getIndicatorByTitle("TB & Leprosy Patients").change}` : "0",
       trending: "up" as const,
       icon: <Shield className="w-6 h-6" />,
       color: "blue" as const
     },
     {
       title: "Anemic Adolescent Girls",
-      value: anemicGirls.toString(),
-      change: anemicGirls > 0 ? `+${anemicGirls}` : "0",
+      value: getIndicatorByTitle("Anemic Adolescent Girls").count.toString(),
+      change: getIndicatorByTitle("Anemic Adolescent Girls").change > 0 ? `+${getIndicatorByTitle("Anemic Adolescent Girls").change}` : "0",
       trending: "up" as const,
       icon: <Users className="w-6 h-6" />,
       color: "purple" as const
     },
     {
       title: "Underweight Children",
-      value: underweightChildren.toString(),
-      change: underweightChildren > 0 ? `+${underweightChildren}` : "0",
+      value: getIndicatorByTitle("Underweight Children").count.toString(),
+      change: getIndicatorByTitle("Underweight Children").change > 0 ? `+${getIndicatorByTitle("Underweight Children").change}` : "0",
       trending: "up" as const,
       icon: <AlertTriangle className="w-6 h-6" />,
       color: "red" as const
     }
   ];
 
-  // Get recent entries from actual data
-  const recentEntries = filteredEntries
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 5)
-    .map(entry => ({
-      module: getModuleName(entry.moduleId),
-      count: 1,
-      time: getTimeAgo(entry.createdAt),
-      data: entry.data
-    }));
-
-  function getModuleName(moduleId: string): string {
-    const moduleNames: Record<string, string> = {
-      'childbirths': 'Childbirths',
-      'underage-marriage': 'Under Age Marriages',
-      'low-birth-weight': 'Low Birth Weight',
-      'incomplete-immunization': 'Immunization',
-      'young-pregnant-mothers': 'Young Pregnant Mothers',
-      'teenage-pregnancy': 'Teenage Pregnancy',
-      'high-risk-pregnancy': 'High Risk Pregnancy',
-      'malnourished-children': 'Malnourished Children',
-      'underweight-children': 'Underweight Children',
-      'anemic-girls': 'Anemic Girls',
-      'infectious-diseases': 'Infectious Diseases',
-      'tb-leprosy': 'TB/Leprosy',
-      'toilet-facilities': 'Toilet Facilities'
-    };
-    return moduleNames[moduleId] || moduleId;
-  }
-
-  function getTimeAgo(date: Date): string {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
-    return `${Math.floor(diffInMinutes / 1440)} days ago`;
-  }
+  // Get recent entries from API data
+  const recentEntries = dashboardData.recentDataEntries || [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6  py-8">
@@ -318,16 +295,16 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4" />
-                <span>{user?.block || 'Jalpaiguri Sadar Block'} | {user?.gpName || 'Belakoba GP'}</span>
+                <span>{dashboardData.gp.block} | {dashboardData.gp.name}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4" />
-                <span>{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                <span>{dashboardData.gp.month}</span>
               </div>
             </div>
           </div>
           <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium">
-            {totalEntries} Total Records
+            {dashboardData.summary.totalRecords} Total Records
           </div>
         </div>
       </div>
@@ -362,17 +339,12 @@ export default function Dashboard() {
             title="Health Issues by Category"
             type="bar"
             data={{
-              labels: ['Malnutrition', 'High Risk', 'Diseases', 'Social Issues'],
+              labels: dashboardData.charts.healthIssuesByCategory.labels,
               datasets: [
                 {
-                  label: 'Cases Reported',
-                  data: [
-                    malnourished + underweightChildren,
-                    highRiskPregnancy,
-                    infectiousDiseases + tbLeprosy,
-                    underageMarriages
-                  ],
-                  color: '#EF4444'
+                  label: dashboardData.charts.healthIssuesByCategory.datasetLabel,
+                  data: dashboardData.charts.healthIssuesByCategory.data,
+                  color: dashboardData.charts.healthIssuesByCategory.color
                 }
               ]
             }}
@@ -382,17 +354,12 @@ export default function Dashboard() {
             title="Vulnerable Groups Monitoring"
             type="line"
             data={{
-              labels: ['Children', 'Adolescents', 'Pregnant Women', 'Patients'],
+              labels: dashboardData.charts.vulnerableGroupsMonitoring.labels,
               datasets: [
                 {
-                  label: 'At Risk Population',
-                  data: [
-                    malnourished + lowBirthWeight + underweightChildren,
-                    anemicGirls,
-                    highRiskPregnancy,
-                    infectiousDiseases + tbLeprosy
-                  ],
-                  color: '#8B5CF6'
+                  label: dashboardData.charts.vulnerableGroupsMonitoring.datasetLabel,
+                  data: dashboardData.charts.vulnerableGroupsMonitoring.data,
+                  color: dashboardData.charts.vulnerableGroupsMonitoring.color
                 }
               ]
             }}
@@ -413,7 +380,7 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900 text-sm">{entry.module}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {entry.data.name || entry.data.motherName || entry.data.patientName || 'New Entry'}
+                        {entry.data?.name || entry.data?.motherName || entry.data?.patientName || 'New Entry'}
                       </p>
                       <p className="text-xs text-gray-400">{entry.time}</p>
                     </div>
@@ -440,19 +407,56 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Total Cases</span>
-                <span className="font-semibold text-gray-900">{totalEntries}</span>
+                <span className="font-semibold text-gray-900">{dashboardData.summary.monthlySummary.totalCases}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Critical Cases</span>
-                <span className="font-semibold text-red-600">{highRiskPregnancy + infectiousDiseases}</span>
+                <span className="font-semibold text-red-600">{dashboardData.summary.monthlySummary.criticalCases}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Children at Risk</span>
-                <span className="font-semibold text-orange-600">{malnourished + underweightChildren + lowBirthWeight}</span>
+                <span className="font-semibold text-orange-600">{dashboardData.summary.monthlySummary.childrenAtRisk}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Social Issues</span>
-                <span className="font-semibold text-purple-600">{underageMarriages}</span>
+                <span className="font-semibold text-purple-600">{dashboardData.summary.monthlySummary.socialIssues}</span>
+              </div>
+              <div className="border-t pt-3 mt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Detailed Breakdown</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Births</span>
+                    <span className="font-medium text-blue-600">{dashboardData.summary.monthlySummary.totalBirths}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Under Age Marriages</span>
+                    <span className="font-medium text-red-600">{dashboardData.summary.monthlySummary.totalUnderAgeMarriages}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Low Birth Weight</span>
+                    <span className="font-medium text-orange-600">{dashboardData.summary.monthlySummary.totalChildrenLowBirthWeight}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Under 20 Pregnancies</span>
+                    <span className="font-medium text-purple-600">{dashboardData.summary.monthlySummary.totalUnderTwentyPregnantMothers}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">High Risk Pregnancies</span>
+                    <span className="font-medium text-red-600">{dashboardData.summary.monthlySummary.totalHighRiskPregnantWomen}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Malnourished Children</span>
+                    <span className="font-medium text-orange-600">{dashboardData.summary.monthlySummary.totalMalnourishedChildren}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Infectious Diseases</span>
+                    <span className="font-medium text-red-600">{dashboardData.summary.monthlySummary.totalInfectiousDiseases}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">TB & Leprosy Patients</span>
+                    <span className="font-medium text-blue-600">{dashboardData.summary.monthlySummary.totalTbLeprosyPatients}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -464,14 +468,14 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <button
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate('/data-entry')}
+                  onClick={() => navigate(dashboardData.actions.addRecordUrl)}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Add New Record</span>
                 </button>
                 <button
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate('/reports')}
+                  onClick={() => navigate(dashboardData.actions.viewReportsUrl)}
                 >
                   <TrendingUp className="w-4 h-4" />
                   <span>View Reports</span>
