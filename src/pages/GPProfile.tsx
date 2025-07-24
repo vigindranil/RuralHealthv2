@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { getUser, setUser as updateUser } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
+import { getUser, setUser as updateUser, UserRole } from '../utils/authUtils'; // Import hardcoded user utils (replaces AuthContext)
 import {
   User, MapPin, Phone, Users, UserCheck, UserCog, Building, HeartPulse
 } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { decodeJwtToken } from "../utils/decodetoken";
 
 const GP_PROFILE_FIELDS = [
   { name: 'gpName', label: 'GP Name', icon: <Building className="w-5 h-5 text-blue-500" /> },
@@ -26,7 +28,11 @@ export default function GPProfile() {
   const [form, setForm] = useState({ ...currentUser });
   const [success, setSuccess] = useState(false);
 
-  if (!currentUser || currentUser.role !== 'GP') {
+  const token = Cookies.get('authToken');
+  const decoded = decodeJwtToken(token);
+  const role = decoded?.UserTypeName;
+
+  if (role !== 'GPAdmin' && role !== 'District Admin') {
     return (
       <div className="p-8 text-red-600 font-bold text-center">
         Access denied. Only GP users can edit this profile.
