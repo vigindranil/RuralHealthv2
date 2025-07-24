@@ -11,8 +11,6 @@ export default function DataEntry() {
   const decoded = decodeJwtToken(token);
   const role = decoded?.UserTypeName;
 
-  console.log(role)
-
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modules, setModules] = useState<Array<any>>([]);
