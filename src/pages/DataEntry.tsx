@@ -105,9 +105,7 @@ export default function DataEntry() {
                 {moduleEmojis[module?.HMTypeName] || moduleEmojis.default}
               </div>
               <div className="flex items-center space-x-2">
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                  {module.count ?? 0} entries  {/* Fallback to 0 if undefined */}
-                </span>
+                
                 {(role === "GPAdmin" || role === "DistrictAdmin") && (
                   <Plus className="w-5 h-5 text-blue-600" />
                 )}

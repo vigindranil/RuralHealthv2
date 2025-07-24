@@ -33,7 +33,7 @@ const hardcodedCredentials: Record<UserRole, { username: string; password: strin
       role: 'GP',
       district: 'Jalpaiguri',
       block: 'Jalpaiguri Sadar',
-      gpName: 'Belakoba GP',
+      gpName: 'ccccc',
     },
   },
   'ICDS Centre': {

@@ -11,6 +11,7 @@ import {
   Calendar,
   MapPin,
 } from "lucide-react";
+import * as Icons from "lucide-react";
 import StatsCard from "../components/StatsCard";
 import ChartCard from "../components/ChartCard";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +45,12 @@ export default function Dashboard() {
   const [selectedGP, setSelectedGP] = React.useState(null);
   const [boundaryDetails, setBoundaryDetails] = useState<any>(null);
   const [boundarySubDetails, setBoundarySubDetails] = useState<any>(null);
+  const token = Cookies.get("authToken");
+  const decoded = decodeJwtToken(token);
+  const DynamicIcon = ({ iconName }: { iconName: string }) => {
+    const LucideIcon = Icons[iconName as keyof typeof Icons];
+    return LucideIcon ? <LucideIcon size={20} /> : null;
+  };
 
   React.useEffect(() => {
     const initializeDashboard = async () => {
@@ -64,14 +71,18 @@ export default function Dashboard() {
           decoded.UserTypeName === "DistrictAdmin"
         ) {
           mappedRole = "District Admin";
+          console.log("Mapped Role isnide if:", mappedRole); // Debug log
         } else if (decoded.UserTypeName === "ICDS") {
           mappedRole = "ICDS Centre";
         } else if (decoded.UserTypeName === "Health") {
           mappedRole = "Health Centre";
         }
 
-        let block = "Jalpaiguri Sadar";
-        let gpName = "Belakoba GP";
+        console.log("Mapped Role:", mappedRole); // Debug log
+
+        let block = "eeee"; // Default block value
+        let gpName = decoded.BoundaryName;
+        console.log("gpName", gpName); // Debug log
         let centreName = "";
         let centreId = decoded.BoundaryID.toString();
 
@@ -192,9 +203,10 @@ export default function Dashboard() {
         title: indicator.title.trim(), // Use the title directly from the API
         value: indicator.count.toString(),
         change: indicator.change > 0 ? `+${indicator.change}` : "0",
-        trending: "up" as const, // Default trending direction
-        icon: <Activity className="w-6 h-6" />, // Use a generic icon for all cards
-        color: "blue" as const, // Use a generic color for all cards
+        trending: indicator.trending, // Default trending direction
+        icon: <DynamicIcon iconName={indicator.icon} />, // Use the icon from the API or default to Heart
+        color: indicator.color, // Use a generic color for all cards
+
         moduleId: slugify(indicator.title), // Generate a moduleId from the title for navigation
       };
     });
@@ -367,7 +379,7 @@ export default function Dashboard() {
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4" />
                 <span>
-                  {dashboardData.gp.block} | {dashboardData.gp.name}
+                  {decoded.UserTypeName} | {decoded.BoundaryName}
                 </span>
               </div>
               <div className="flex items-center space-x-2">

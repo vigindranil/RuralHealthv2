@@ -24,7 +24,7 @@ export default function WorkInProgress() {
         </h1>
 
         {/* Sub-heading with a friendly emoji */}
-        <p className="text-lg text-slate-600 mb-8">
+        <p className="text-lg text-slate-600 pt-2 mb-8">
           Our team is currently working on this feature. It's going to be great! 💪
         </p>
 

@@ -23,11 +23,41 @@ const moduleConfig = {
   'childbirths-last-one-month-only-non-institutional-births': {
     apiFunction: getRawUnderageMarriageData,
   },
-  'marriages-under-age': {
+  'under-age-marriages': {
     apiFunction: getRawUnderageMarriageData,
   },
-  // Add other modules here
+  'low-birth-weight-children': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'children-who-have-not-completed-immunization': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'under-20-years-of-age-pregnant-mothers': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'teenage-pregrancy-regutered': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'high-risk-pregnancies': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'malnourished-children': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'underweight-children': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'anemic-adolescent-girls': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'infectious-diseases': {
+    apiFunction: getRawUnderageMarriageData,
+  },
+  'tb-leprosy-patients': {
+    apiFunction: getRawUnderageMarriageData,
+  }
 };
+
 
 // Table headers matching the API response structure
 const tableHeaders = [

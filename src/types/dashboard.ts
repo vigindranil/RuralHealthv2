@@ -26,10 +26,13 @@ export interface DashboardResponse {
         };
       };
       healthIndicators: Array<{
-        it: number,
+        id: number,
         title: string;
         count: number;
         change: number;
+        icon: string; // Use string to allow for emoji or icon names
+        color: string;
+        trending: string; // Use string literals for trending direction
       }>;
       charts: {
         healthIssuesByCategory: {
