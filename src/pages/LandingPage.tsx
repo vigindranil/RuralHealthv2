@@ -262,7 +262,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-blue-100 mb-6 text-lg italic">"{testimonial.content}"</p>
                 <div>
-                  <p className="text-white font-semibold">{testimonial.name}</p>
+                  {/* <p className="text-white font-semibold">{testimonial.name}</p> */}
                   <p className="text-blue-300">{testimonial.role}</p>
                 </div>
               </div>
