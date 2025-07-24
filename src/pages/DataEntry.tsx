@@ -49,7 +49,7 @@ export default function DataEntry() {
   };
 
   const handleModuleClick = (moduleId: string) => {
-    if (role !== "GPAdmin") return; // Early return if not authorized
+    // if (role !== "GPAdmin") return; // Early return if not authorized
     if (isModalOpen) return; // Prevent multiple modals from stacking
     console.log("Opening modal for module ID:", moduleId); // Debug log
     setSelectedModule(String(moduleId)); // Convert to string for FormModal compatibility
@@ -95,7 +95,7 @@ export default function DataEntry() {
           <div
             key={module.HMTypeID}
             onClick={() => handleModuleClick(module.HMTypeID)}
-            className={`bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border ${role === "GPAdmin"
+            className={`bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border ${(role === "GPAdmin" || role === "DistrictAdmin")
               ? "cursor-pointer hover:border-blue-300"
               : "cursor-not-allowed opacity-60"
               }`}
@@ -108,7 +108,7 @@ export default function DataEntry() {
                 <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
                   {module.count ?? 0} entries  {/* Fallback to 0 if undefined */}
                 </span>
-                {role === "GPAdmin" && (
+                {(role === "GPAdmin" || role === "DistrictAdmin") && (
                   <Plus className="w-5 h-5 text-blue-600" />
                 )}
               </div>
