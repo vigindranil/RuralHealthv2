@@ -26,8 +26,8 @@ export const fetchDashboardData = async (
       BoundaryLevelID: boundaryLevelID,
       BoundaryID: boundaryID,
       UserID: userID,
-      FromDate: fromDate,
-      ToDate: toDate,
+      FromDate: null,
+      ToDate: null,
     }),
   });
 
