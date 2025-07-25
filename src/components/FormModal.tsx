@@ -384,6 +384,20 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         console.log('Submitting to Non-MatriMa API with payload:', payload);
         response = await saveNonMatriMa(payload);
 
+        if (response.status !== 0) {
+          showToast('Error: ' + response.message, 'error');
+        }
+        else {
+          showToast('Success! Everything went well.', 'success');
+        }
+        onClose();
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error('Axios error - message:', err.message);          // e.g. "Network Error" or "Request failed with status 400"
+        console.error('Axios error - config :', err.config);           // request details
+        console.error('Axios error - status :', err.response?.status); // HTTP status (if any)
+        console.error('Axios error - data   :', err.response?.data);   // server payload (validation message, etc.)
       } else {
         // --- Payload for saveMatriMa (existing logic) ---
         const payload = {
