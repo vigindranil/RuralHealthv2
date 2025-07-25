@@ -392,8 +392,12 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       const res = await saveMatriMa(payload);
       console.log('API response:', res);
 
-
-      alert('Data submitted successfully.');
+      if (res.status === 0) {
+        alert('Data submitted successfully.');
+      } else {
+        alert(`Error: ${res.message || 'Unknown error'}`);
+        return;
+      }
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {
