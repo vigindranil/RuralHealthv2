@@ -147,9 +147,10 @@ export default function ModuleDetailPage() {
     if (!tableData.length) return;
     const worksheet = XLSX.utils.json_to_sheet(tableData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, pageTitle);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'report');
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer]), `${pageTitle.replace(/\s+/g, '_')}_Jalpaiguri.xlsx`);
+    // saveAs(new Blob([excelBuffer]), `${pageTitle.replace(/\s+/g, '_')}_Jalpaiguri.xlsx`);
+    saveAs(new Blob([excelBuffer]), `report.xlsx`);
   };
 
   if (isLoading) {
