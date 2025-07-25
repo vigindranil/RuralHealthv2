@@ -202,7 +202,7 @@ export default function Dashboard() {
         id: indicator.id,
         title: indicator.title.trim(), // Use the title directly from the API
         value: indicator.count.toString(),
-        change: indicator.change > 0 ? `+${indicator.change}` : "0",
+        change: indicator.change > 0 ? `+${indicator.change}%` : "0",
         trending: indicator.trending, // Default trending direction
         icon: <DynamicIcon iconName={indicator.icon} />, // Use the icon from the API or default to Heart
         color: indicator.color, // Use a generic color for all cards
@@ -348,21 +348,7 @@ export default function Dashboard() {
             </div>
           </>
         )}
-        {isICDS && (
-          <div className="px-4 py-2 bg-purple-50 text-purple-800 rounded-lg font-semibold border border-purple-200">
-            ICDS Centre: {user.centreName}
-          </div>
-        )}
-        {isHealth && (
-          <div className="px-4 py-2 bg-green-50 text-green-800 rounded-lg font-semibold border border-green-200">
-            Health Centre: {user.centreName}
-          </div>
-        )}
-        {isGP && (
-          <div className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg font-semibold border border-blue-200">
-            GP: {user.gpName}
-          </div>
-        )}
+
       </div>
       {/* Header */}
       <div className="mb-8">
@@ -388,9 +374,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium">
-            {dashboardData.summary.totalRecords} Total Records
-          </div>
+
         </div>
       </div>
 
