@@ -524,6 +524,10 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                           onChange={(e) => handleInputChange(field.id, e.target.value)}
                           className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
                           placeholder={`Enter ${field.label.toLowerCase()}`}
+                          // INSERT_YOUR_CODE
+                          pattern={field.id === 'contactNo' ? '[0-9]{10}' : undefined}
+                          maxLength={field.id === 'contactNo' ? 10 : undefined}
+                          inputMode={field.id === 'contactNo' ? 'numeric' : undefined}
                           disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
                         />
                       </div>
