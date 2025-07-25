@@ -17,7 +17,7 @@ export default function Navigation() {
       if (decoded) {
         // Map role based on UserTypeID or UserTypeName (matching Dashboard logic)
         let mappedRole = 'GP'; // Default fallback
-        if (decoded.UserTypeID === 150 || decoded.UserTypeName === 'DistrictAdmin') {
+        if (decoded.UserTypeID === 200 || decoded.UserTypeName === 'DistrictAdmin') {
           mappedRole = 'District Admin';
         } else if (decoded.UserTypeName === 'ICDS') {
           mappedRole = 'ICDS Centre';
@@ -42,7 +42,7 @@ export default function Navigation() {
     }
   }, [navigate]);
 
-  // If user is not loaded yet, show a placeholder or nothing (Navigation is only shown if token exists)
+  // If user is not loaded yet, show a placeholder or nothing
   if (!user) {
     return null; // Or a loading spinner if preferred
   }
@@ -75,8 +75,8 @@ export default function Navigation() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              // Only show Data Entry for GP users
-              (item.path === '/data-entry' && user?.role !== 'GP' && user?.role !== 'District Admin') ? null : (
+              // **MODIFIED**: Only show Data Entry for 'GP' users. This now hides it for District Admins.
+              (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
@@ -103,14 +103,6 @@ export default function Navigation() {
                 <div className="text-gray-500">{user?.role}</div>
               </div>
             </div>
-            {/* {user?.role === 'GP' && (
-              <button
-                onClick={() => navigate('/gp-profile')}
-                className="w-full bg-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center space-x-2"
-              >
-                <span>Edit GP Profile</span>
-              </button>
-            )} */}
 
             <button
               onClick={handleLogout}
@@ -126,12 +118,12 @@ export default function Navigation() {
         <div className="md:hidden py-3 border-t border-gray-200">
           <div className="flex space-x-1">
             {navItems.map((item) => (
-              // Only show Data Entry for GP users
+              // This logic was already correct: only show Data Entry for 'GP' users.
               (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
+                  className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}

@@ -175,3 +175,41 @@ export const saveGpProfile = async (payload: GpProfilePayload) => {
 
   return await response.json(); // Return the response data from the server
 };
+
+
+
+export interface NonMatriMaPayload {
+  InHMID: string;
+  DistrictID: string;
+  SubDivisionID: string;
+  IsUrban: string;
+  MunicipalityID: string;
+  BlockID: string;
+  GPID: string;
+  VillageName: string;
+  HealthCentreID: string;
+  ICDSCentreID: string;
+  HMTypeID: string;
+  EntryUserID: string;
+  ContactNo?: string;
+  InfectiousDiseaseID?: string;
+  AffectedPersonName?: string;
+  TBLeprosyPatientName?: string;
+  NikshayMitra?: string; // "1" for Yes, "0" for No
+  HusbandName?: string;
+  GirlName?: string;
+  GirlAge?: string | number;
+  GirlWeight?: string | number;
+  GirlFatherName?: string;
+}
+
+
+export async function saveNonMatriMa(info: NonMatriMaPayload) {
+  const token = Cookies.get('authToken') ?? '';
+  const { data } = await axios.post(
+    `${BASE_URL}/save-non-matrima-related-info`,
+    info,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data; 
+}
