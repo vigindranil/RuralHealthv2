@@ -155,7 +155,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <ToastProvider>
         {/* <Router> */}
-        <BrowserRouter>
+        <BrowserRouter basename="/RuralHealth">
           <AppContent />
         {/* </Router> */}
         </BrowserRouter>
