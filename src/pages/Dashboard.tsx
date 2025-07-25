@@ -32,6 +32,14 @@ const slugify = (text: string) =>
     .replace(/\s+/g, "-") // Replace spaces with a single dash
     .replace(/-+/g, "-"); // Replace multiple dashes with a single one
 
+// Updated the list of disabled forms
+const DISABLED_SAVE_FORMS = [
+  "underage-marriage",
+  "tb-leprosy",
+  "infectious-diseases",
+  "anemic-adolescent-girls",
+];
+
 export default function Dashboard() {
   const [user, setUser] = React.useState<User | null>(null);
   const [dashboardData, setDashboardData] = React.useState<
@@ -198,6 +206,12 @@ export default function Dashboard() {
     }
 
     return dashboardData.healthIndicators.map((indicator) => {
+      const moduleId = slugify(indicator.title);
+      // More robust check for disabled slugs
+      const isDisabled = DISABLED_SAVE_FORMS.some((disabledSlug) =>
+        moduleId.replace(/-/g, "").includes(disabledSlug.replace(/-/g, ""))
+      );
+
       return {
         id: indicator.id,
         title: indicator.title.trim(), // Use the title directly from the API
@@ -206,8 +220,8 @@ export default function Dashboard() {
         trending: indicator.trending, // Default trending direction
         icon: <DynamicIcon iconName={indicator.icon} />, // Use the icon from the API or default to Heart
         color: indicator.color, // Use a generic color for all cards
-
-        moduleId: slugify(indicator.title), // Generate a moduleId from the title for navigation
+        moduleId: moduleId, // Generate a moduleId from the title for navigation
+        isDisabled: isDisabled,
       };
     });
   }, [dashboardData]);
@@ -240,7 +254,6 @@ export default function Dashboard() {
             onClick={() => window.location.reload()}
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors"
           >
-            
             Retry
           </button>
           <div className="mt-6 text-sm text-gray-500">
@@ -389,13 +402,24 @@ export default function Dashboard() {
 
       {/* Unified Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {allStats.map((stat) => (
-          <StatsCard
-            key={stat.id}
-            {...stat}
-            onClick={() => navigate(`/details/${stat.moduleId}/${stat.id}`)}
-          />
-        ))}
+        {allStats.map((stat) => {
+          const { isDisabled, ...restStat } = stat;
+          return (
+            <div
+              key={stat.id}
+              className={isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+            >
+              <StatsCard
+                {...restStat}
+                onClick={
+                  isDisabled
+                    ? undefined
+                    : () => navigate(`/details/${stat.moduleId}/${stat.id}`)
+                }
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Charts and Recent Activity */}
