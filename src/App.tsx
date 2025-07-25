@@ -20,6 +20,9 @@ import GPProfile from "./pages/GPProfile";
 import ICDSDataEntry from "./pages/ICDSDataEntry";
 import HealthCentreDataEntry from "./pages/HealthCentreDataEntry";
 import { useLocation } from "react-router-dom";
+import { ToastProvider } from "../src/context/ToastContext"
+
+
 
 // ProtectedRoute wrapper: Checks for authToken in cookies
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -150,9 +153,11 @@ function AppContent() {
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-        <BrowserRouter basename="/RuralHealth">
-        <AppContent />
-      </BrowserRouter>
+      <ToastProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ToastProvider>
     </div>
   );
 }

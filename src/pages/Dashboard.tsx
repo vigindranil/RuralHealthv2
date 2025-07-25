@@ -202,7 +202,7 @@ export default function Dashboard() {
         id: indicator.id,
         title: indicator.title.trim(), // Use the title directly from the API
         value: indicator.count.toString(),
-        change: indicator.change > 0 ? `+${indicator.change}` : "0",
+        change: indicator.change > 0 ? `+${indicator.change}%` : "0",
         trending: indicator.trending, // Default trending direction
         icon: <DynamicIcon iconName={indicator.icon} />, // Use the icon from the API or default to Heart
         color: indicator.color, // Use a generic color for all cards
@@ -225,16 +225,27 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 px-4">
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-red-100">
+          <div className="flex flex-col items-center mb-2">
+            <span className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg mb-4 animate-float">
+              <AlertTriangle className="w-10 h-10 text-white" />
+            </span>
+            <h2 className="text-2xl font-bold text-green-800 mb-2">
+              Something went wrong
+            </h2>
+          </div>
+          <p className="text-yellow-600 mb-6 text-base">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition-colors"
           >
+            
             Retry
           </button>
+          <div className="mt-6 text-sm text-gray-500">
+            If the problem persists, please contact support.
+          </div>
         </div>
       </div>
     );
@@ -348,21 +359,6 @@ export default function Dashboard() {
             </div>
           </>
         )}
-        {isICDS && (
-          <div className="px-4 py-2 bg-purple-50 text-purple-800 rounded-lg font-semibold border border-purple-200">
-            ICDS Centre: {user.centreName}
-          </div>
-        )}
-        {isHealth && (
-          <div className="px-4 py-2 bg-green-50 text-green-800 rounded-lg font-semibold border border-green-200">
-            Health Centre: {user.centreName}
-          </div>
-        )}
-        {isGP && (
-          <div className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg font-semibold border border-blue-200">
-            GP: {user.gpName}
-          </div>
-        )}
       </div>
       {/* Header */}
       <div className="mb-8">
@@ -388,9 +384,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium">
-            {dashboardData.summary.totalRecords} Total Records
-          </div>
         </div>
       </div>
 
@@ -406,9 +399,9 @@ export default function Dashboard() {
       </div>
 
       {/* Charts and Recent Activity */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8 ">
         {/* Charts */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 ">
           <ChartCard
             title="Health Issues by Category"
             type="bar"
@@ -607,14 +600,14 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <button
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate('/data-entry')}
+                  onClick={() => navigate("/data-entry")}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Add New Record</span>
                 </button>
                 <button
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate('/reports')}
+                  onClick={() => navigate("/reports")}
                 >
                   <TrendingUp className="w-4 h-4" />
                   <span>View Reports</span>

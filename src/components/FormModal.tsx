@@ -7,6 +7,8 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { decodeJwtToken } from '../utils/decodetoken';
 import { getAllHealthandIcdsCentres } from '../api/dropDownData';
+import { useToast } from '../context/ToastContext';
+
 
 
 
@@ -42,9 +44,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     title: 'Under Age Marriages',
     fields: [
       { id: 'name', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -59,9 +59,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     fields: [
       { id: 'motherMaId', label: "Mother's ID (Matri Ma ID)", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'motherName', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -78,9 +76,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childName', label: 'Child Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -98,9 +94,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'childName', label: 'Child Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -115,9 +109,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     fields: [
       { id: 'motherMaId', label: "Mother's ID (Matri Ma ID)", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -132,9 +124,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     fields: [
       { id: 'motherMaId', label: "Mother's ID (Matri Ma ID)", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -149,9 +139,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     fields: [
       { id: 'motherMaId', label: "Mother's ID (Matri Ma ID)", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'motherName', label: "Mother's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'husbandName', label: 'Husband Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -170,9 +158,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -191,9 +177,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'childId', label: 'Child ID', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherName', label: "Father's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -209,9 +193,7 @@ const MODULE_CONFIGS: Record<string, any> = {
       { id: 'name', label: 'Name', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'childDob', label: 'Date of Birth', type: 'date', required: false },
       { id: 'weight', label: 'Weight (kg)', type: 'number', step: '0.1', required: true },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'fatherHusbandName', label: "Father's/Husband's Name", type: 'text', required: true, icon: <User className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
@@ -226,9 +208,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     fields: [
       { id: 'diseaseName', label: 'Infectious Disease Name', type: 'select', options: ['Dengue', 'Malaria', 'Kala azar', 'Japanese Encephalitis'], required: true },
       { id: 'affectedPersonName', label: 'Name of affected people', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'icdsCentreName', label: 'ICDS Centre Name', type: 'select', options: ['ICDS-1', 'ICDS-2', 'ICDS-3'], required: true, icon: <Building className="w-4 h-4" /> },
@@ -241,9 +221,7 @@ const MODULE_CONFIGS: Record<string, any> = {
     title: 'TB and leprosy patients',
     fields: [
       { id: 'patientName', label: 'Name TB/leprosy patients', type: 'text', required: true, icon: <User className="w-4 h-4" /> },
-      { id: 'district', label: 'District', type: 'text', defaultValue: 'Jalpaiguri', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'block', label: 'Block', type: 'text', defaultValue: 'Jalpaiguri Sadar', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
-      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', defaultValue: 'Belakoba', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
+      { id: 'gramPanchayat', label: 'Gram Panchayat (GP)', type: 'text', readOnly: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'villageName', label: 'Village Name', type: 'text', required: true, icon: <MapPin className="w-4 h-4" /> },
       { id: 'contactNo', label: 'Contact No', type: 'tel', required: true, icon: <Phone className="w-4 h-4" /> },
       { id: 'nikshayMitra', label: 'Ni-kshay Mitra', type: 'select', options: ['Yes', 'No'], required: true },
@@ -267,7 +245,6 @@ const MODULE_CONFIGS: Record<string, any> = {
   }
 };
 
-
 export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps) {
   // Use hardcoded user from utils (no context) - fallback to GP for demo if null
   const user = getUser() || {
@@ -282,8 +259,11 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const [dropdownError, setDropdownError] = useState<string | null>(null);
   const token = Cookies.get('authToken');
   const decoded = decodeJwtToken(token);
-  const GPID = decoded?.BoundaryID || '0'; // Fallback to '0' if not found
+  // INSERT_YOUR_CODE
 
+  const { showToast } = useToast();
+  const GPID = decoded?.BoundaryID || '0'; // Fallback to '0' if not found
+  const GPName = decoded?.BoundaryName || 'Gram Panchayat'; // Fallback to 'Gram Panchayat' if not found
 
   // Normalize moduleId using the map
   const normalizedId = moduleId ? ID_TO_CONFIG_MAP[moduleId] || moduleId : null;
@@ -318,13 +298,16 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
   useEffect(() => {
     if (isOpen) {
-      // modal just opened → load defaults
-      setFormData(defaultValues);
+      const initialFormData = {
+        ...defaultValues,      // 1. Start with all the static default values.
+        gramPanchayat: GPName,   // 2. Explicitly set/override gramPanchayat with the value from the cookie.
+      };
+      setFormData(initialFormData);
     } else {
       // modal just closed → clear form
       setFormData({});
     }
-  }, [isOpen, defaultValues]);
+  }, [isOpen, defaultValues, GPName]);
 
 
   useEffect(() => {
@@ -414,8 +397,11 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       const res = await saveMatriMa(payload);
       console.log('API response:', res);
 
+      if (res.status !== 0) {
+        showToast('Error: ' + res.message, 'error');
+      }
 
-      alert('Data submitted successfully.');
+      showToast('Success! Everything went well.', 'success');
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -428,7 +414,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       }
 
 
-      alert('Error submitting data. Check console for details.');
+      // alert('Error submitting data. Check console for details.');
+      showToast('Error submitting data', 'error')
     } finally {
       setLoading(false);
       console.log('Loading state reset');
@@ -539,6 +526,10 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                           onChange={(e) => handleInputChange(field.id, e.target.value)}
                           className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
                           placeholder={`Enter ${field.label.toLowerCase()}`}
+                          // INSERT_YOUR_CODE
+                          pattern={field.id === 'contactNo' ? '[0-9]{10}' : undefined}
+                          maxLength={field.id === 'contactNo' ? 10 : undefined}
+                          inputMode={field.id === 'contactNo' ? 'numeric' : undefined}
                           disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
                         />
                       </div>
@@ -562,7 +553,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{loading ? 'Saving...' : 'Save Data'}</span>
+                <span>{loading ? 'Saving....' : 'Save Data'}</span>
               </button>
             </div>
           </form>
