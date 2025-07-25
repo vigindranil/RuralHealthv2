@@ -7,6 +7,8 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { decodeJwtToken } from '../utils/decodetoken';
 import { getAllHealthandIcdsCentres } from '../api/dropDownData';
+import { useToast } from '../context/ToastContext';
+
 
 
 
@@ -257,6 +259,9 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const [dropdownError, setDropdownError] = useState<string | null>(null);
   const token = Cookies.get('authToken');
   const decoded = decodeJwtToken(token);
+  // INSERT_YOUR_CODE
+ 
+  const  { showToast } = useToast();
   const GPID = decoded?.BoundaryID || '0'; // Fallback to '0' if not found
   const GPName = decoded?.BoundaryName || 'Gram Panchayat'; // Fallback to 'Gram Panchayat' if not found
 
@@ -393,7 +398,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       console.log('API response:', res);
 
 
-      alert('Data submitted successfully.');
+      // showToast('Something went wrong!', 'error')
+      showToast('Success! Everything went well.', 'success')
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -406,7 +412,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       }
 
 
-      alert('Error submitting data. Check console for details.');
+      // alert('Error submitting data. Check console for details.');
+      showToast('Error submitting data', 'error')
     } finally {
       setLoading(false);
       console.log('Loading state reset');

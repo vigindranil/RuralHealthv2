@@ -21,7 +21,7 @@ const colorClasses = {
 export default function StatsCard({ title, value, change, trending, icon, color, onClick }: StatsCardProps) {
   return (
     <div
-      className={`relative group bg-gradient-to-br from-white via-blue-50 to-green-50 rounded-2xl shadow-lg p-6 border-2 border-transparent hover:border-blue-300 transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative group bg-gradient-to-br from-white via-blue-50 to-green-50 rounded-2xl shadow-lg p-6 border-2 border-transparent mt-5 hover:border-blue-300 transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       {/* Floating Icon */}
