@@ -331,6 +331,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
   if (!isOpen || !moduleId) return null;
 
+  // --- CORRECTED handleSubmit FUNCTION ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!normalizedId) {
@@ -345,7 +346,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     try {
       let response;
 
-      // Check which API to call based on the form type
+      // Determine which API to call based on the form type
       if (NON_MATRIMA_FORMS.has(normalizedId)) {
         // --- Payload for saveNonMatriMa ---
         const payload: any = {
@@ -377,27 +378,13 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
             break;
           case 'infectious-diseases':
             payload.AffectedPersonName = orEmpty(formData.affectedPersonName);
-            payload.InfectiousDiseaseID = '0'; // Placeholder as per curl example
+            payload.InfectiousDiseaseID = '0'; // Placeholder
             break;
         }
 
         console.log('Submitting to Non-MatriMa API with payload:', payload);
         response = await saveNonMatriMa(payload);
 
-        if (response.status !== 0) {
-          showToast('Error: ' + response.message, 'error');
-        }
-        else {
-          showToast('Success! Everything went well.', 'success');
-        }
-        onClose();
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.error('Axios error - message:', err.message);          // e.g. "Network Error" or "Request failed with status 400"
-        console.error('Axios error - config :', err.config);           // request details
-        console.error('Axios error - status :', err.response?.status); // HTTP status (if any)
-        console.error('Axios error - data   :', err.response?.data);   // server payload (validation message, etc.)
       } else {
         // --- Payload for saveMatriMa (existing logic) ---
         const payload = {
