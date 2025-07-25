@@ -407,13 +407,12 @@ export default function Dashboard() {
           return (
             <div
               key={stat.id}
-              className={isDisabled ? "opacity-50 cursor-not-allowed" : ""}
             >
               <StatsCard
                 {...restStat}
                 onClick={
                   isDisabled
-                    ? undefined
+                    ? () => navigate(`/details/${stat.moduleId}/${stat.id}`)
                     : () => navigate(`/details/${stat.moduleId}/${stat.id}`)
                 }
               />
