@@ -591,14 +591,14 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <button
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate(dashboardData.actions.addRecordUrl)}
+                  onClick={() => navigate('/data-entry')}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Add New Record</span>
                 </button>
                 <button
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2"
-                  onClick={() => navigate(dashboardData.actions.viewReportsUrl)}
+                  onClick={() => navigate('/reports')}
                 >
                   <TrendingUp className="w-4 h-4" />
                   <span>View Reports</span>
