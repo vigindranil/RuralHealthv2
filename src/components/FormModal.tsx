@@ -400,8 +400,9 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       if (res.status !== 0) {
         showToast('Error: ' + res.message, 'error');
       }
-
-      showToast('Success! Everything went well.', 'success');
+      else {
+        showToast('Success! Everything went well.', 'success');
+      }
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {
