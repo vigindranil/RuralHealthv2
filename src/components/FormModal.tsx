@@ -9,16 +9,11 @@ import { decodeJwtToken } from '../utils/decodetoken';
 import { getAllHealthandIcdsCentres } from '../api/dropDownData';
 import { useToast } from '../context/ToastContext';
 
-
-
-
-
 interface FormModalProps {
   moduleId: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
 
 // Mapping from API HMTypeID (as string) to config keys
 const ID_TO_CONFIG_MAP: Record<string, string> = {
@@ -37,6 +32,13 @@ const ID_TO_CONFIG_MAP: Record<string, string> = {
   // Add 'toilet-facilities' if it gets an ID from API
 };
 
+// Define which forms should have disabled/hidden save buttons
+const DISABLED_SAVE_FORMS = [
+  'underage-marriage',
+  'tb-leprosy',
+  'infectious-diseases',
+  'anemic-girls'
+];
 
 // Configs extracted outside for performance (content unchanged)
 const MODULE_CONFIGS: Record<string, any> = {
@@ -259,7 +261,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const [dropdownError, setDropdownError] = useState<string | null>(null);
   const token = Cookies.get('authToken');
   const decoded = decodeJwtToken(token);
-  // INSERT_YOUR_CODE
 
   const { showToast } = useToast();
   const GPID = decoded?.BoundaryID || '0'; // Fallback to '0' if not found
@@ -269,6 +270,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const normalizedId = moduleId ? ID_TO_CONFIG_MAP[moduleId] || moduleId : null;
   const config = normalizedId ? MODULE_CONFIGS[normalizedId] || { title: 'Unknown Module', fields: [] } : { title: 'Unknown Module', fields: [] };
 
+  // Check if save button should be disabled/hidden for this form
+  const isSaveDisabled = normalizedId ? DISABLED_SAVE_FORMS.includes(normalizedId) : false;
 
   const ICDS_CENTRES = [
     { name: 'ICDS-1', id: 'ICDS001' },
@@ -280,10 +283,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     { name: 'Belakoba PHC', id: 'HC002' },
   ];
 
-
   // IDs that should never be rendered as visible controls
   const HIDDEN_FIELD_IDS = ['icdsCentreId', 'healthCentreId'];
-
 
   const defaultValues = React.useMemo(() => {
     if (!normalizedId) return {};
@@ -294,7 +295,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       return acc;
     }, {});
   }, [normalizedId]);
-
 
   useEffect(() => {
     if (isOpen) {
@@ -308,7 +308,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       setFormData({});
     }
   }, [isOpen, defaultValues, GPName]);
-
 
   useEffect(() => {
     async function fetchDropdownData() {
@@ -342,16 +341,12 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       }
     }
 
-
     if (isOpen) {
       fetchDropdownData();
     }
   }, [isOpen]);
 
-
-
   if (!isOpen || !moduleId) return null;
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     const orZero = (v?: unknown) => {
@@ -364,7 +359,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     setLoading(true);
     try {
       console.log('Submitting form with data:', formData);
-
 
       const payload = {
         MatriMaRelatedInfoID: '0',
@@ -390,9 +384,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         EntryUserID: user.id,
       };
 
-
       console.log('Payload:', payload);
-
 
       const res = await saveMatriMa(payload);
       console.log('API response:', res);
@@ -405,7 +397,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       onClose();
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.error('Axios error - message:', err.message);          // e.g. “Network Error” or “Request failed with status 400”
+        console.error('Axios error - message:', err.message);          // e.g. "Network Error" or "Request failed with status 400"
         console.error('Axios error - config :', err.config);           // request details
         console.error('Axios error - status :', err.response?.status); // HTTP status (if any)
         console.error('Axios error - data   :', err.response?.data);   // server payload (validation message, etc.)
@@ -413,15 +405,12 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         console.error('Unknown error:', err);
       }
 
-
-      // alert('Error submitting data. Check console for details.');
       showToast('Error submitting data', 'error')
     } finally {
       setLoading(false);
       console.log('Loading state reset');
     }
   };
-
 
   const handleInputChange = (fieldId: string, value: string) => {
     setFormData(prev => {
@@ -430,7 +419,6 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
           icdsCentres.find(c => c.name === value) ||
           ICDS_CENTRES.find(c => c.name === value);
 
-
         return {
           ...prev,
           icdsCentreName: value,
@@ -438,13 +426,11 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         };
       }
 
-
       /* ---------- Health centre ---------- */
       if (fieldId === 'healthCentreName') {
         const found =
           healthCentres.find(c => c.name === value) ||
           HEALTH_CENTRES.find(c => c.name === value);
-
 
         return {
           ...prev,
@@ -453,11 +439,9 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
         };
       }
 
-
       return { ...prev, [fieldId]: value };
     });
   };
-
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -472,6 +456,19 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
+
+        {/* Disabled Form Notice */}
+        {isSaveDisabled && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 m-6 mb-0">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Note:</strong> This form is currently in view-only mode. Data submission is temporarily disabled for this module.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
@@ -497,7 +494,7 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                               : (field.options || []).map((o: string) => ({ id: o, name: o }))
                         }
                         placeholder={`Select ${field.label}`}
-                        disabled={field.readOnly}
+                        disabled={field.readOnly || isSaveDisabled}
                       />
                     ) : field.type === 'textarea' ? (
                       <textarea
@@ -506,8 +503,9 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                         value={formData[field.id] || field.defaultValue || ''}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         placeholder={`Enter ${field.label.toLowerCase()}`}
+                        disabled={isSaveDisabled}
                       />
                     ) : (
                       // This is the single, correct "else" block for all other input types
@@ -524,13 +522,12 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                           required={field.required}
                           value={formData[field.id] || field.defaultValue || ''}
                           onChange={(e) => handleInputChange(field.id, e.target.value)}
-                          className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
+                          className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
                           placeholder={`Enter ${field.label.toLowerCase()}`}
-                          // INSERT_YOUR_CODE
                           pattern={field.id === 'contactNo' ? '[0-9]{10}' : undefined}
                           maxLength={field.id === 'contactNo' ? 10 : undefined}
                           inputMode={field.id === 'contactNo' ? 'numeric' : undefined}
-                          disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat')}
+                          disabled={field.readOnly || (field.id === 'district' || field.id === 'block' || field.id === 'gramPanchayat') || isSaveDisabled}
                         />
                       </div>
                     )}
@@ -545,16 +542,18 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                 onClick={onClose}
                 className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors duration-200"
               >
-                Cancel
+                {isSaveDisabled ? 'Close' : 'Cancel'}
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>{loading ? 'Saving....' : 'Save Data'}</span>
-              </button>
+              {!isSaveDisabled && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{loading ? 'Saving....' : 'Save Data'}</span>
+                </button>
+              )}
             </div>
           </form>
         </div>
