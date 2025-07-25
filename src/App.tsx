@@ -6,6 +6,7 @@ import {
   Navigate,
   Outlet,
   useNavigate,
+  BrowserRouter,
 } from "react-router-dom";
 import Cookies from "js-cookie"; // For cookie checks (consistent with LoginPage and Dashboard)
 import LandingPage from "./pages/LandingPage";
@@ -149,9 +150,9 @@ function AppContent() {
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Router>
+        <BrowserRouter basename="/RuralHealth">
         <AppContent />
-      </Router>
+      </BrowserRouter>
     </div>
   );
 }
