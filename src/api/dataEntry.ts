@@ -1,6 +1,5 @@
 import Cookies from "js-cookie";
 import axios from 'axios';
-import Cookies from 'js-cookie';
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3010/api";
 
 export const getDataEntries = async () => {
@@ -133,6 +132,69 @@ export const getRawUnderageMarriageData = async (params: ApiParams) => {
   return result;
 };
 
+// GP Profile related interfaces and functions
+export interface GpProfileData {
+  GpProfileID: number;
+  DistrictName: string;
+  BlockName: string;
+  GPID: number;
+  GPName: string;
+  GPAddress: string;
+  ProdhanName: string;
+  ProdhanContactNo: string;
+  SecretaryName: string;
+  SecretaryContactNo: string;
+  ExecutiveName: string;
+  ExecutiveContactNo: string;
+  TotalPopulationQty: number;
+  MalePopulationQty: number;
+  FemalePopulationQty: number;
+  TotalICDSCentreQty: number;
+  TotalHealthCentreQty: number;
+}
+
+export interface GpProfileResponse {
+  status: number;
+  message: string;
+  data: GpProfileData[];
+}
+
+export interface GpProfileFetchParams {
+  BoundaryLevelID: string;
+  BoundaryID: string;
+  UserID: string;
+  FromDate: null;
+  ToDate: null;
+}
+
+export const getGpProfileInfo = async (params: GpProfileFetchParams): Promise<GpProfileResponse> => {
+  const token = Cookies.get('authToken');
+
+  if (!token) {
+    throw new Error('Authentication token not found.');
+  }
+
+  const response = await fetch(`${BASE_URL}/get-gp-profile-info`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch GP profile: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json();
+
+  if (result.status !== 0) {
+    throw new Error(result.message || 'Failed to fetch GP profile information.');
+  }
+
+  return result;
+};
 
 export interface GpProfilePayload {
   GPID: string | number;
@@ -176,8 +238,6 @@ export const saveGpProfile = async (payload: GpProfilePayload) => {
   return await response.json(); // Return the response data from the server
 };
 
-
-
 export interface NonMatriMaPayload {
   InHMID: string;
   DistrictID: string;
@@ -202,7 +262,6 @@ export interface NonMatriMaPayload {
   GirlWeight?: string | number;
   GirlFatherName?: string;
 }
-
 
 export async function saveNonMatriMa(info: NonMatriMaPayload) {
   const token = Cookies.get('authToken') ?? '';
