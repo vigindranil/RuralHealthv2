@@ -9,6 +9,8 @@ import axios from 'axios';
 import { decodeJwtToken } from '../utils/decodetoken';
 import { getAllHealthandIcdsCentres } from '../api/dropDownData';
 import { useToast } from '../context/ToastContext';
+// Import validation functions from the separate utility file
+import { validateForm } from '../utils/validation';
 
 interface FormModalProps {
   moduleId: string | null;
@@ -248,7 +250,6 @@ const MODULE_CONFIGS: Record<string, any> = {
   }
 };
 
-
 export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps) {
   const user = getUser() || { id: '1', role: 'GP' };
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -256,6 +257,10 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
   const [icdsCentres, setIcdsCentres] = useState<{ name: string; id: string }[]>([]);
   const [healthCentres, setHealthCentres] = useState<{ name: string; id: string }[]>([]);
   const [dropdownError, setDropdownError] = useState<string | null>(null);
+
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const token = Cookies.get('authToken');
   const decoded = decodeJwtToken(token);
@@ -302,6 +307,14 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     }
   }, [isOpen, defaultValues, GPName]);
 
+  // Clear validation errors when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setValidationErrors({});
+      setShowValidationErrors(false);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     async function fetchDropdownData() {
       setDropdownError(null);
@@ -331,13 +344,48 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
 
   if (!isOpen || !moduleId) return null;
 
-  // --- CORRECTED handleSubmit FUNCTION ---
+  // Updated handleSubmit with validation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!normalizedId) {
       showToast('Error: Module ID is missing.', 'error');
       return;
     }
+
+    // Validate form before submission
+    const validation = validateForm(formData, config, normalizedId);
+
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setShowValidationErrors(true);
+
+      // Show first error in toast
+      const firstErrorField = Object.keys(validation.errors)[0];
+      const firstError = validation.errors[firstErrorField][0];
+      showToast(`Validation Error: ${firstError}`, 'error');
+
+      // Scroll to first error field
+      const firstErrorElement = document.getElementById(firstErrorField);
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorElement.focus();
+      }
+
+      return; // Stop submission
+    }
+
+    // Clear validation errors if form is valid
+    setValidationErrors({});
+    setShowValidationErrors(false);
+
+    // Show warnings if any
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => {
+        showToast(warning, 'warning');
+      });
+    }
+
     setLoading(true);
 
     const orZero = (v: any) => (v === undefined || v === null || String(v).trim() === '') ? '0' : String(v).trim();
@@ -430,17 +478,31 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
     }
   };
 
+  // Updated handleInputChange with real-time validation
   const handleInputChange = (fieldId: string, value: string) => {
     setFormData(prev => {
+      let newFormData;
+
       if (fieldId === 'icdsCentreName') {
         const found = icdsCentres.find(c => c.name === value) || ICDS_CENTRES.find(c => c.name === value);
-        return { ...prev, icdsCentreName: value, icdsCentreId: found ? String(found.id) : '' };
-      }
-      if (fieldId === 'healthCentreName') {
+        newFormData = { ...prev, icdsCentreName: value, icdsCentreId: found ? String(found.id) : '' };
+      } else if (fieldId === 'healthCentreName') {
         const found = healthCentres.find(c => c.name === value) || HEALTH_CENTRES.find(c => c.name === value);
-        return { ...prev, healthCentreName: value, healthCentreId: found ? String(found.id) : '' };
+        newFormData = { ...prev, healthCentreName: value, healthCentreId: found ? String(found.id) : '' };
+      } else {
+        newFormData = { ...prev, [fieldId]: value };
       }
-      return { ...prev, [fieldId]: value };
+
+      // Clear field error when user starts typing
+      if (validationErrors[fieldId]) {
+        setValidationErrors(prevErrors => {
+          const newErrors = { ...prevErrors };
+          delete newErrors[fieldId];
+          return newErrors;
+        });
+      }
+
+      return newFormData;
     });
   };
 
@@ -488,7 +550,8 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                         value={formData[field.id] || field.defaultValue || ''}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                       />
                     ) : (
@@ -505,13 +568,26 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
                           required={field.required}
                           value={formData[field.id] || field.defaultValue || ''}
                           onChange={(e) => handleInputChange(field.id, e.target.value)}
-                          className={`w-full py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${field.icon ? 'pl-10 pr-3' : 'px-3'}`}
+                          className={`w-full py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${field.icon ? 'pl-10 pr-3' : 'px-3'
+                            } ${validationErrors[field.id] ? 'border-red-500' : 'border-gray-300'}`}
                           placeholder={`Enter ${field.label.toLowerCase()}`}
                           pattern={field.id === 'contactNo' ? '[0-9]{10}' : undefined}
-                          maxLength={field.id === 'contactNo' ? 10 : undefined}
+                          maxLength={field.id === 'contactNo' ? 10 : 100}
                           inputMode={field.id === 'contactNo' ? 'numeric' : undefined}
                           disabled={field.readOnly || (field.id === 'gramPanchayat')}
                         />
+                      </div>
+                    )}
+
+                    {/* Display field-specific errors */}
+                    {validationErrors[field.id] && showValidationErrors && (
+                      <div className="mt-1">
+                        {validationErrors[field.id].map((error, index) => (
+                          <p key={index} className="text-sm text-red-600 flex items-center">
+                            <span className="mr-1">⚠️</span>
+                            {error}
+                          </p>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -541,4 +617,4 @@ export default function FormModal({ moduleId, isOpen, onClose }: FormModalProps)
       </div>
     </div>
   );
-}
+} 

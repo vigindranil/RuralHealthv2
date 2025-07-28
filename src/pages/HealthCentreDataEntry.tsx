@@ -33,13 +33,13 @@ export default function HealthCentreDataEntry() {
   const [form, setForm] = useState({});
   const [success, setSuccess] = useState(false);
 
-  if (!user || user.role !== 'GP') {
-    return (
-      <div className="p-8 text-red-600 font-bold text-center">
-        Access denied. Only GP users can enter Health Centre data.
-      </div>
-    );
-  }
+  // if (!user || user.role !== 'GP') {
+  //   return (
+  //     <div className="p-8 text-red-600 font-bold text-center">
+
+  //     </div>
+  //   );
+  // }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
