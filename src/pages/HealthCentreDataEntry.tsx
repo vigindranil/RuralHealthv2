@@ -36,7 +36,7 @@ export default function HealthCentreDataEntry() {
   // if (!user || user.role !== 'GP') {
   //   return (
   //     <div className="p-8 text-red-600 font-bold text-center">
-
+  //       Access denied. Only GP users can enter Health Centre data.
   //     </div>
   //   );
   // }
