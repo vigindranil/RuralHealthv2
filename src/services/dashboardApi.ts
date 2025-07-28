@@ -26,8 +26,8 @@ export const fetchDashboardData = async (
       BoundaryLevelID: boundaryLevelID,
       BoundaryID: boundaryID,
       UserID: userID,
-      FromDate: null,
-      ToDate: null,
+      FromDate: fromDate || null,
+      ToDate: toDate || null,
     }),
   });
 
@@ -42,4 +42,35 @@ export const fetchDashboardData = async (
   }
 
   return data;
+};
+
+export interface MonthDateRange {
+  month: string;
+  year: number;
+  fromDate: string;
+  toDate: string;
+}
+
+
+export const fetchMonthlyDateRanges = async (year: number): Promise<MonthDateRange[]> => {
+  const token = Cookies.get("authToken");
+  // The endpoint and request body should match your API specification
+  const response = await fetch(`${BASE_URL}/get-monthly-date-ranges`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` 
+    },
+    body: JSON.stringify({ year })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch monthly date ranges');
+  }
+
+  const result = await response.json();
+  if (result.status !== 0) {
+     throw new Error(result.message || 'Failed to fetch date ranges');
+  }
+  return result.data;
 };

@@ -173,7 +173,7 @@ export const validateForm = (
           break;
 
         case 'text':
-           if (['motherMaId', 'childId'].includes(field.id)) {
+           if (['motherMaId', 'childId', 'villageName'].includes(field.id)) {
               // Specific validation for these IDs is handled in cross-field validation
            } else if (field.id.toLowerCase().includes('name') && !['icdsCentreName', 'healthCentreName'].includes(field.id)) {
             if (!isValidName(value)) {

@@ -7,11 +7,11 @@ interface StatsCardProps {
   change: string;
   trending: 'up' | 'down';
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'red' | 'purple' | string; // Allow any color string
+  color: 'blue' | 'green' | 'red' | 'purple' | string;
   onClick?: () => void;
 }
 
-// Adjusted to handle dynamic colors from API
+// Color mapping for the icon background
 const colorClasses = {
   blue: 'bg-blue-100 text-blue-600',
   green: 'bg-green-100 text-green-600',
@@ -20,42 +20,43 @@ const colorClasses = {
   yellow: 'bg-yellow-100 text-yellow-600',
 };
 
-// Helper to get color class or fallback
+// Helper to get color class or provide a fallback
 const getColorClasses = (colorName: string) => {
   return colorClasses[colorName as keyof typeof colorClasses] || colorClasses.blue;
 }
 
-
 export default function StatsCard({ title, value, change, trending, icon, color, onClick }: StatsCardProps) {
   const isLongTitle = title.length > 45;
 
-  // Inject animation keyframes globally once
-  if (typeof window !== 'undefined' && !document.getElementById('statscard-float-style')) {
-    const style = document.createElement('style');
-    style.id = 'statscard-float-style';
-    style.innerHTML = `
-      @keyframes float {
-        0% { transform: translateY(0); }
-        50% { transform: translateY(-6px); }
-        100% { transform: translateY(0); }
-      }
-      .animate-float { animation: float 1.6s ease-in-out infinite; }
-    `;
-    document.head.appendChild(style);
-  }
+  // The JavaScript style injection has been removed.
 
   return (
     <div
-      className={`relative group bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-4 border-2 border-transparent mt-5 hover:border-blue-400 transition-all duration-200 flex flex-col h-52 ${onClick ? 'cursor-pointer' : ''}`}
-      style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)' }}
+      className={`
+        relative group bg-white/60 backdrop-blur-md rounded-2xl p-4 border-2 border-transparent mt-5 
+        hover:border-blue-400 transition-all duration-200 flex flex-col h-52 
+        shadow-[0_8px_32px_0_rgba(31,38,135,0.10)]
+        ${onClick ? 'cursor-pointer' : ''}
+      `}
       onClick={onClick}
     >
-      {/* Gradient Border Accent */}
-      <div className="absolute inset-0 rounded-2xl pointer-events-none border-2 border-transparent group-hover:border-blue-400 group-hover:shadow-lg" style={{ zIndex: 1, background: 'linear-gradient(120deg, rgba(59,130,246,0.12) 0%, rgba(16,185,129,0.10) 100%)' }} />
+      {/* Gradient Border Accent - now using arbitrary values for the gradient colors */}
+      <div
+        className="
+          absolute inset-0 rounded-2xl pointer-events-none border-2 border-transparent 
+          group-hover:border-blue-400 group-hover:shadow-lg z-10 
+          bg-gradient-to-br from-[rgba(59,130,246,0.12)] to-[rgba(16,185,129,0.10)]
+        "
+      />
 
-      {/* Floating Icon with Animation */}
-      <div className={`absolute -top-7 left-1/2 -translate-x-1/2 z-10 shadow-lg rounded-full p-3 border-4 border-white ${getColorClasses(color)} group-hover:scale-110 group-hover:animate-float transition-transform duration-300`}
-        style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.10)' }}>
+      {/* Floating Icon with Animation - using the new `animate-float` utility */}
+      <div
+        className={`
+          absolute -top-7 left-1/2 -translate-x-1/2 z-10 rounded-full p-3 border-4 border-white 
+          ${getColorClasses(color)} group-hover:scale-110 group-hover:animate-float transition-transform duration-300
+          shadow-[0_4px_24px_0_rgba(0,0,0,0.10)]
+        `}
+      >
         {icon}
       </div>
 

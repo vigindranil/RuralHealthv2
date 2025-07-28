@@ -135,10 +135,10 @@ export default function ModuleDetailPage() {
           setError("Failed to fetch data using fetchCall");
           setIsLoading(false);
         }
-        finally{
+        finally {
 
           setIsLoading(false);
-          
+
         }
       }
       // ...rest of the original fetchDataAndTransform logic...
@@ -149,9 +149,17 @@ export default function ModuleDetailPage() {
   }, [moduleId, id, BoundaryLevelID, BoundaryID, UserID]);
 
   useEffect(() => {
+    const getDatesFromStorage = () => {
+      const savedDateRange = sessionStorage.getItem('dashboardDateRange');
+      if (savedDateRange) {
+        return JSON.parse(savedDateRange);
+      }
+      return { fromDate: null, toDate: null }; // Default values
+    };
     const fetchDataAndTransform = async () => {
       if (!idsToUseFetchCall.includes(Number(id))) {
         const config = moduleConfig[moduleId];
+        const { fromDate, toDate } = getDatesFromStorage();
 
         if (!config) {
           setError("Module configuration not found");
@@ -167,8 +175,8 @@ export default function ModuleDetailPage() {
           BoundaryLevelID: BoundaryLevelID,
           BoundaryID: BoundaryID,
           UserID: UserID,
-          FromDate: null,
-          ToDate: null,
+          FromDate: fromDate,
+          ToDate: toDate,
         };
 
         try {
@@ -204,7 +212,7 @@ export default function ModuleDetailPage() {
           console.error("API Error:", err);
           setError(
             err instanceof Error ? err.message : "An unknown error occurred"
-          );
+          ); 
         } finally {
           setIsLoading(false);
         }
