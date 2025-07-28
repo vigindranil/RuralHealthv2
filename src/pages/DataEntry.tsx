@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Plus, Save, X, Building, User } from "lucide-react";
+import { FileText, Plus, Building, User } from "lucide-react";
 import FormModal from "../components/FormModal";
 import { useNavigate } from "react-router-dom";
 import { getDataEntries } from "../api/dataEntry";
@@ -13,7 +13,12 @@ export default function DataEntry() {
 
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modules, setModules] = useState<Array<any>>([]);
+  interface ModuleItem {
+    HMTypeID: string;
+    HMTypeName: string;
+    HMDescription?: string;
+  }
+  const [modules, setModules] = useState<ModuleItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -57,7 +62,8 @@ export default function DataEntry() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-white to-green-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Data Entry</h1>
@@ -95,7 +101,7 @@ export default function DataEntry() {
           <div
             key={module.HMTypeID}
             onClick={() => handleModuleClick(module.HMTypeID)}
-            className={`bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border ${(role === "GPAdmin" || role === "DistrictAdmin")
+            className={`bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border ${(role === "GPAdmin" || role === "DistrictAdmin")
               ? "cursor-pointer hover:border-blue-300"
               : "cursor-not-allowed opacity-60"
               }`}
@@ -119,7 +125,7 @@ export default function DataEntry() {
         ))}
         <div
           onClick={() => navigate("/icds-data-entry")}
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="text-3xl">
@@ -141,7 +147,7 @@ export default function DataEntry() {
 
         <div
           onClick={() => navigate("/health-centre-data-entry")}
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="text-3xl">
@@ -164,7 +170,7 @@ export default function DataEntry() {
 
        {role === "GPAdmin" && <div
           onClick={() => navigate("/gp-profile")}
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 border cursor-pointer hover:border-green-400"
+          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="text-3xl">
@@ -183,10 +189,7 @@ export default function DataEntry() {
             Enter or update details your GP profile
           </p>
         </div>}
-      
       </div>
-
-      
 
       {/* Form Modal */}
       <FormModal
@@ -197,6 +200,7 @@ export default function DataEntry() {
           setSelectedModule(null);
         }}
       />
+      </div>
     </div>
   );
 }
