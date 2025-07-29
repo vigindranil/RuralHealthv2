@@ -3,86 +3,42 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Plus, Minus, FileDown, Inbox } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { getRawUnderageMarriageData } from "../api/dataEntry";
+import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { decodeJwtToken } from "../utils/decodetoken";
 import Cookies from "js-cookie";
+
+// API Functions
+import { getRawUnderageMarriageData } from "../api/dataEntry";
 import { getnonmatrimarelatedinfo } from "../api/fetchCall";
 
+// Setup for Leaflet map icons
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 
-// Maps URL slug to the specific API function to call
-const moduleConfig = {
-  "childbirths-last-one-month-only-non-institutional-births": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "under-age-marriages": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "low-birth-weight-children": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "children-who-have-not-completed-immunization": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "under-20-years-of-age-pregnant-mothers": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "teenage-pregrancy-regutered": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "high-risk-pregnancies": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "malnourished-children": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "underweight-children": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "anemic-adolescent-girls": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "infectious-diseases": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-  "tb-leprosy-patients": {
-    apiFunction: getRawUnderageMarriageData,
-  },
-};
-
-// Table headers matching the API response structure
+// Table headers remain the same, matching the API response structure
 const tableHeaders = [
-  "Name",
-  "District",
-  "Block",
-  "Gram Panchayat (GP)",
-  "Village Name",
-  "Husband Name",
-  "Phone Number",
-  "ICDS Centre Name",
-  "ICDS Centre ID",
-  "Health Centre Name",
-  "Health Centre ID",
+  "Name", "District", "Block", "Gram Panchayat (GP)", "Village Name",
+  "Husband Name", "Phone Number", "ICDS Centre Name", "ICDS Centre ID",
+  "Health Centre Name", "Health Centre ID",
 ];
 
 export default function ModuleDetailPage() {
-  const { moduleId, id } = useParams();
+  // 1. Get ONLY `id` from useParams. `moduleId` is no longer needed.
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const token = Cookies.get("authToken");
   const decoded = decodeJwtToken(token);
   const BoundaryLevelID = decoded?.BoundaryLevelID;
   const BoundaryID = decoded?.BoundaryID;
   const UserID = decoded?.UserID || "1";
-  const navigate = useNavigate();
 
   const [pageTitle, setPageTitle] = useState("Loading...");
   const [tableData, setTableData] = useState([]);
@@ -90,32 +46,64 @@ export default function ModuleDetailPage() {
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(null);
 
-  // If the id is one of [2, 10, 11, 12], call the fetchCall function
+  // Array of IDs that use the specific 'getnonmatrimarelatedinfo' API
+  const idsToUseNonMatrimaApi = [2, 10, 11, 12];
 
-  const idsToUseFetchCall = [2, 10, 11, 12];
-
+  // 2. Unified useEffect for all data fetching, triggered by `id` or user context.
   useEffect(() => {
     const fetchDataAndTransform = async () => {
-      if (idsToUseFetchCall.includes(Number(id))) {
-        try {
-          setIsLoading(true);
-          setError(null);
-          const response = await getnonmatrimarelatedinfo(
-            Number(id),
-            BoundaryLevelID,
-            BoundaryID,
-            UserID
-          );
+      // Ensure we have the necessary IDs before fetching
+      if (!id || !BoundaryLevelID || !BoundaryID || !UserID) {
+        setError("User information is missing. Please log in again.");
+        setIsLoading(false);
+        return;
+      }
 
-          if (response && response.status === 0 && response.data) {
-            const { title, records } = response.data;
-            setPageTitle(title || "Module Details");
+      setIsLoading(true);
+      setError(null);
+      setTableData([]); // Clear previous data on new fetch
 
-            // Transform the records to match our table structure
+      try {
+        let apiFunction;
+        let requestParams;
+        const numericId = Number(id);
+
+        // A. Determine which API and parameters to use based on the ID
+        if (idsToUseNonMatrimaApi.includes(numericId)) {
+          apiFunction = getnonmatrimarelatedinfo;
+          // This API call does not require date parameters
+          requestParams = [numericId, String(BoundaryLevelID), String(BoundaryID), String(UserID), null, null];
+        } else {
+          // For all other IDs, get dates from session storage
+          const savedDateRange = sessionStorage.getItem('dashboardDateRange');
+          const { fromDate, toDate } = savedDateRange ? JSON.parse(savedDateRange) : { fromDate: null, toDate: null };
+
+          apiFunction = getRawUnderageMarriageData;
+          requestParams = [{
+            HMTypeID: id,
+            BoundaryLevelID: String(BoundaryLevelID),
+            BoundaryID: String(BoundaryID),
+            UserID: String(UserID),
+            FromDate: fromDate,
+            ToDate: toDate,
+          }];
+        }
+
+        // B. Call the determined API function
+        // Note: The spread operator `...` works for both function signature types
+        const response = await apiFunction(...requestParams);
+
+        // C. Process the response in a unified way
+        if (response && response.status === 0 && response.data) {
+          const { title, records } = response.data;
+          setPageTitle(title || "Module Details");
+
+          if (records && records.length > 0) {
+            // This transformation logic is now defined only once
             const transformedRecords = records.map((record) => ({
-              Name: record.name || "N/A",
-              District: record.district || "N/A",
-              Block: record.block || "N/A",
+              "Name": record.name || "N/A",
+              "District": record.district || "N/A",
+              "Block": record.block || "N/A",
               "Gram Panchayat (GP)": record.gramPanchayat || "N/A",
               "Village Name": record.village || "N/A",
               "Husband Name": record.husbandName || "N/A",
@@ -125,114 +113,35 @@ export default function ModuleDetailPage() {
               "Health Centre Name": record.healthCentreName || "N/A",
               "Health Centre ID": record.healthCentreId || "N/A",
             }));
-
             setTableData(transformedRecords);
           } else {
-            setTableData([]);
-            setPageTitle("No Data Available");
+            setTableData([]); // Ensure table is empty if no records
           }
-        } catch (err) {
-          setError("Failed to fetch data using fetchCall");
-          setIsLoading(false);
-        }
-        finally {
-
-          setIsLoading(false);
-
-        }
-      }
-      // ...rest of the original fetchDataAndTransform logic...
-    };
-
-    fetchDataAndTransform();
-    // eslint-disable-next-line
-  }, [moduleId, id, BoundaryLevelID, BoundaryID, UserID]);
-
-  useEffect(() => {
-    const getDatesFromStorage = () => {
-      const savedDateRange = sessionStorage.getItem('dashboardDateRange');
-      if (savedDateRange) {
-        return JSON.parse(savedDateRange);
-      }
-      return { fromDate: null, toDate: null }; // Default values
-    };
-    const fetchDataAndTransform = async () => {
-      if (!idsToUseFetchCall.includes(Number(id))) {
-        const config = moduleConfig[moduleId];
-        const { fromDate, toDate } = getDatesFromStorage();
-
-        if (!config) {
-          setError("Module configuration not found");
-          setIsLoading(false);
-          return;
-        }
-
-        setIsLoading(true);
-        setError(null);
-
-        const requestParams = {
-          HMTypeID: id,
-          BoundaryLevelID: BoundaryLevelID,
-          BoundaryID: BoundaryID,
-          UserID: UserID,
-          FromDate: fromDate,
-          ToDate: toDate,
-        };
-
-        try {
-          // Updated to handle the actual API response structure
-          const response = await config.apiFunction(requestParams);
-
-          // The API returns the full response, not just records
-          if (response && response.status === 0 && response.data) {
-            const { title, records } = response.data;
-            setPageTitle(title || "Module Details");
-
-            // Transform the records to match our table structure
-            const transformedRecords = records.map((record) => ({
-              Name: record.name || "N/A",
-              District: record.district || "N/A",
-              Block: record.block || "N/A",
-              "Gram Panchayat (GP)": record.gramPanchayat || "N/A",
-              "Village Name": record.village || "N/A",
-              "Husband Name": record.husbandName || "N/A",
-              "Phone Number": record.phone || "N/A",
-              "ICDS Centre Name": record.icdsCentreName || "N/A",
-              "ICDS Centre ID": record.icdsCentreId || "N/A",
-              "Health Centre Name": record.healthCentreName || "N/A",
-              "Health Centre ID": record.healthCentreId || "N/A",
-            }));
-
-            setTableData(transformedRecords);
-          } else {
-            setTableData([]);
-            setPageTitle("No Data Available");
+        } else {
+          setTableData([]);
+          setPageTitle("No Data Available");
+          if (response && response.message) {
+            setError(response.message);
           }
-        } catch (err) {
-          console.error("API Error:", err);
-          setError(
-            err instanceof Error ? err.message : "An unknown error occurred"
-          ); 
-        } finally {
-          setIsLoading(false);
         }
+      } catch (err) {
+        console.error("API Error:", err);
+        setError(err instanceof Error ? err.message : "An unknown error occurred while fetching data.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchDataAndTransform();
-  }, [moduleId, id, BoundaryID, BoundaryLevelID, UserID]);
+  }, [id, BoundaryID, BoundaryLevelID, UserID]); // Dependency array is now simpler
 
   const handleExport = () => {
     if (!tableData.length) return;
     const worksheet = XLSX.utils.json_to_sheet(tableData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "report");
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    // saveAs(new Blob([excelBuffer]), `${pageTitle.replace(/\s+/g, '_')}_Jalpaiguri.xlsx`);
-    saveAs(new Blob([excelBuffer]), `report.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([excelBuffer]), `${pageTitle.replace(/\s+/g, '_') || 'report'}.xlsx`);
   };
 
   if (isLoading) {
@@ -243,10 +152,18 @@ export default function ModuleDetailPage() {
     );
   }
 
-  if (error) {
+  // Show a full-page error only if something went wrong and there's no data
+  if (error && !tableData.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50 text-xl font-semibold text-red-700">
-        Error: {error}
+      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 text-xl font-semibold text-red-700 p-4 text-center">
+        <h2>Error Fetching Data</h2>
+        <p className="text-sm font-normal text-red-600 mt-2">{error}</p>
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="mt-6 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition-all text-sm"
+        >
+          ← Back to Dashboard
+        </button>
       </div>
     );
   }
@@ -271,7 +188,7 @@ export default function ModuleDetailPage() {
             </span>
           </h1>
           <p className="text-gray-500 text-lg">
-            Detailed data for the last one month
+            Detailed data for the selected period
           </p>
         </div>
 
@@ -296,10 +213,7 @@ export default function ModuleDetailPage() {
                   <tr>
                     <th className="w-8"></th>
                     {tableHeaders.map((header) => (
-                      <th
-                        key={header}
-                        className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-nowrap"
-                      >
+                      <th key={header} className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-nowrap">
                         {header}
                       </th>
                     ))}
@@ -310,53 +224,24 @@ export default function ModuleDetailPage() {
                     <React.Fragment key={idx}>
                       <tr className="group hover:bg-blue-50/70 transition-colors border-b border-blue-100">
                         <td className="px-4 py-2 text-center align-top">
-                          <button
-                            onClick={() =>
-                              setExpanded((prev) => (prev === idx ? null : idx))
-                            }
-                            className="p-1.5 focus:outline-none"
-                            aria-label="Expand row"
-                          >
-                            {expanded === idx ? (
-                              <Minus className="w-4 h-4 text-blue-600" />
-                            ) : (
-                              <Plus className="w-4 h-4 text-blue-600" />
-                            )}
+                          <button onClick={() => setExpanded((prev) => (prev === idx ? null : idx))} className="p-1.5 focus:outline-none" aria-label="Expand row">
+                            {expanded === idx ? <Minus className="w-4 h-4 text-blue-600" /> : <Plus className="w-4 h-4 text-blue-600" />}
                           </button>
                         </td>
                         {tableHeaders.map((header) => (
-                          <td
-                            key={header}
-                            className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900"
-                          >
-                            {row[header] || (
-                              <span className="text-gray-400 italic">N/A</span>
-                            )}
+                          <td key={header} className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900">
+                            {row[header] || <span className="text-gray-400 italic">N/A</span>}
                           </td>
                         ))}
                       </tr>
                       {expanded === idx && (
                         <tr>
-                          <td
-                            colSpan={tableHeaders.length + 1}
-                            className="bg-gradient-to-r from-blue-50 to-green-50 px-8 py-6 text-gray-700"
-                          >
+                          <td colSpan={tableHeaders.length + 1} className="bg-gradient-to-r from-blue-50 to-green-50 px-8 py-6 text-gray-700">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
                               {tableHeaders.map((header) => (
-                                <div
-                                  key={header}
-                                  className="flex gap-2 items-baseline"
-                                >
-                                  <span className="font-semibold text-blue-800 min-w-[150px]">
-                                    {header}:
-                                  </span>
-                                  <span className="text-gray-800">
-                                    {row[header] || (
-                                      <span className="text-gray-400 italic">
-                                        N/A
-                                      </span>
-                                    )}
-                                  </span>
+                                <div key={header} className="flex gap-2 items-baseline">
+                                  <span className="font-semibold text-blue-800 min-w-[150px]">{header}:</span>
+                                  <span className="text-gray-800">{row[header] || <span className="text-gray-400 italic">N/A</span>}</span>
                                 </div>
                               ))}
                             </div>
@@ -370,12 +255,9 @@ export default function ModuleDetailPage() {
             ) : (
               <div className="text-center py-16">
                 <Inbox className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-lg font-medium text-gray-900">
-                  No Records Found
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  There is no data available for this indicator.
-                </p>
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No Records Found</h3>
+                <p className="mt-1 text-sm text-gray-500">There is no data available for this indicator for the selected period.</p>
+                {error && <p className="mt-2 text-sm text-red-600">Error: {error}</p>}
               </div>
             )}
           </div>
@@ -383,20 +265,10 @@ export default function ModuleDetailPage() {
 
         <div className="mt-10">
           <div className="bg-white/90 rounded-2xl shadow-xl border border-blue-100 p-6">
-            <h2 className="text-2xl font-bold text-blue-800 mb-4">
-              Reported Cases by Centre (Map)
-            </h2>
-            <MapContainer
-              center={[26.5825, 88.7237]}
-              zoom={11}
-              scrollWheelZoom={false}
-              style={{ height: 350, width: "100%" }}
-            >
-              <TileLayer
-                attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {/* Add Marker logic here if needed */}
+            <h2 className="text-2xl font-bold text-blue-800 mb-4">Reported Cases by Centre (Map)</h2>
+            <MapContainer center={[26.5825, 88.7237]} zoom={11} scrollWheelZoom={false} style={{ height: 350, width: "100%" }}>
+              <TileLayer attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {/* Add Marker logic here in the future if location data becomes available */}
             </MapContainer>
           </div>
         </div>

@@ -112,7 +112,7 @@ function AppContent() {
           }
         />
         <Route
-          path="/details/:moduleId/:id"
+          path="/details/:id"
           element={
             <ProtectedRoute>
               <ModuleDetailPage />
@@ -157,7 +157,7 @@ function App() {
         {/* <Router> */}
         <BrowserRouter basename="/RuralHealth">
           <AppContent />
-        {/* </Router> */}
+          {/* </Router> */}
         </BrowserRouter>
       </ToastProvider>
     </div>

@@ -433,7 +433,7 @@ export default function Dashboard() {
                   >
                     <StatsCard
                       {...restStat}
-                      onClick={() => navigate(`/details/${stat.moduleId}/${stat.id}`)}
+                      onClick={() => navigate(`/details/${stat.id}`)}
                     />
                   </div>
                 );
