@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, Minus, FileDown, Inbox } from "lucide-react";
+import { Plus, Minus, FileDown, Inbox, ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { MapContainer, TileLayer } from "react-leaflet";
@@ -13,6 +13,46 @@ import Cookies from "js-cookie";
 import { getRawUnderageMarriageData } from "../api/dataEntry";
 import { getnonmatrimarelatedinfo } from "../api/fetchCall";
 
+// --- Type Definitions for TypeScript ---
+
+// Shape of the data used directly in the table rows
+interface TableRow {
+  "Name": string;
+  "District": string;
+  "Block": string;
+  "Gram Panchayat (GP)": string;
+  "Village Name": string;
+  "Husband Name": string;
+  "Phone Number": string;
+  "ICDS Centre Name": string;
+  "ICDS Centre ID": string;
+  "Health Centre Name": string;
+  "Health Centre ID": string;
+  [key: string]: string; // Index signature for flexible access
+}
+
+// Shape of a single record from the API response
+interface ApiRecord {
+  name?: string;
+  district?: string;
+  block?: string;
+  gramPanchayat?: string;
+  village?: string;
+  husbandName?: string;
+  phone?: string;
+  icdsCentreName?: string;
+  icdsCentreId?: string;
+  healthCentreName?: string;
+  healthCentreId?: string;
+}
+
+// Shape of the decoded JWT token payload
+interface DecodedToken {
+  BoundaryLevelID?: number;
+  BoundaryID?: number;
+  UserID?: string;
+}
+
 // Setup for Leaflet map icons
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -23,36 +63,36 @@ L.Icon.Default.mergeOptions({
 });
 
 // Table headers remain the same, matching the API response structure
-const tableHeaders = [
+const tableHeaders: string[] = [
   "Name", "District", "Block", "Gram Panchayat (GP)", "Village Name",
   "Husband Name", "Phone Number", "ICDS Centre Name", "ICDS Centre ID",
   "Health Centre Name", "Health Centre ID",
 ];
 
-export default function ModuleDetailPage() {
-  // 1. Get ONLY `id` from useParams. `moduleId` is no longer needed.
-  const { id } = useParams();
+// Define items per page for pagination
+const ITEMS_PER_PAGE = 10;
+
+const ModuleDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const token = Cookies.get("authToken");
-  const decoded = decodeJwtToken(token);
+  const decoded: DecodedToken | null = decodeJwtToken(token);
   const BoundaryLevelID = decoded?.BoundaryLevelID;
   const BoundaryID = decoded?.BoundaryID;
   const UserID = decoded?.UserID || "1";
 
-  const [pageTitle, setPageTitle] = useState("Loading...");
-  const [tableData, setTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState(null);
+  const [pageTitle, setPageTitle] = useState<string>("Loading...");
+  const [tableData, setTableData] = useState<TableRow[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Array of IDs that use the specific 'getnonmatrimarelatedinfo' API
   const idsToUseNonMatrimaApi = [2, 10, 11, 12];
 
-  // 2. Unified useEffect for all data fetching, triggered by `id` or user context.
   useEffect(() => {
     const fetchDataAndTransform = async () => {
-      // Ensure we have the necessary IDs before fetching
       if (!id || !BoundaryLevelID || !BoundaryID || !UserID) {
         setError("User information is missing. Please log in again.");
         setIsLoading(false);
@@ -61,20 +101,19 @@ export default function ModuleDetailPage() {
 
       setIsLoading(true);
       setError(null);
-      setTableData([]); // Clear previous data on new fetch
+      setTableData([]);
+      setCurrentPage(1);
+      setExpanded(null);
 
       try {
-        let apiFunction;
-        let requestParams;
+        let apiFunction: (...args: any[]) => Promise<any>;
+        let requestParams: any[];
         const numericId = Number(id);
 
-        // A. Determine which API and parameters to use based on the ID
         if (idsToUseNonMatrimaApi.includes(numericId)) {
           apiFunction = getnonmatrimarelatedinfo;
-          // This API call does not require date parameters
           requestParams = [numericId, String(BoundaryLevelID), String(BoundaryID), String(UserID), null, null];
         } else {
-          // For all other IDs, get dates from session storage
           const savedDateRange = sessionStorage.getItem('dashboardDateRange');
           const { fromDate, toDate } = savedDateRange ? JSON.parse(savedDateRange) : { fromDate: null, toDate: null };
 
@@ -89,18 +128,14 @@ export default function ModuleDetailPage() {
           }];
         }
 
-        // B. Call the determined API function
-        // Note: The spread operator `...` works for both function signature types
         const response = await apiFunction(...requestParams);
 
-        // C. Process the response in a unified way
         if (response && response.status === 0 && response.data) {
           const { title, records } = response.data;
           setPageTitle(title || "Module Details");
 
           if (records && records.length > 0) {
-            // This transformation logic is now defined only once
-            const transformedRecords = records.map((record) => ({
+            const transformedRecords: TableRow[] = records.map((record: ApiRecord) => ({
               "Name": record.name || "N/A",
               "District": record.district || "N/A",
               "Block": record.block || "N/A",
@@ -115,7 +150,7 @@ export default function ModuleDetailPage() {
             }));
             setTableData(transformedRecords);
           } else {
-            setTableData([]); // Ensure table is empty if no records
+            setTableData([]);
           }
         } else {
           setTableData([]);
@@ -124,7 +159,7 @@ export default function ModuleDetailPage() {
             setError(response.message);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("API Error:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred while fetching data.");
       } finally {
@@ -133,15 +168,28 @@ export default function ModuleDetailPage() {
     };
 
     fetchDataAndTransform();
-  }, [id, BoundaryID, BoundaryLevelID, UserID]); // Dependency array is now simpler
+  }, [id, BoundaryID, BoundaryLevelID, UserID]);
 
-  const handleExport = () => {
+  const handleExport = (): void => {
     if (!tableData.length) return;
     const worksheet = XLSX.utils.json_to_sheet(tableData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([excelBuffer]), `${pageTitle.replace(/\s+/g, '_') || 'report'}.xlsx`);
+  };
+
+  const totalPages = Math.ceil(tableData.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentTableData = tableData.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage: number): void => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      setExpanded(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   if (isLoading) {
@@ -152,7 +200,6 @@ export default function ModuleDetailPage() {
     );
   }
 
-  // Show a full-page error only if something went wrong and there's no data
   if (error && !tableData.length) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 text-xl font-semibold text-red-700 p-4 text-center">
@@ -220,36 +267,39 @@ export default function ModuleDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-blue-50">
-                  {tableData.map((row, idx) => (
-                    <React.Fragment key={idx}>
-                      <tr className="group hover:bg-blue-50/70 transition-colors border-b border-blue-100">
-                        <td className="px-4 py-2 text-center align-top">
-                          <button onClick={() => setExpanded((prev) => (prev === idx ? null : idx))} className="p-1.5 focus:outline-none" aria-label="Expand row">
-                            {expanded === idx ? <Minus className="w-4 h-4 text-blue-600" /> : <Plus className="w-4 h-4 text-blue-600" />}
-                          </button>
-                        </td>
-                        {tableHeaders.map((header) => (
-                          <td key={header} className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900">
-                            {row[header] || <span className="text-gray-400 italic">N/A</span>}
+                  {currentTableData.map((row, idx) => {
+                    const absoluteIndex = startIndex + idx;
+                    return (
+                      <React.Fragment key={absoluteIndex}>
+                        <tr className="group hover:bg-blue-50/70 transition-colors border-b border-blue-100">
+                          <td className="px-4 py-2 text-center align-top">
+                            <button onClick={() => setExpanded((prev) => (prev === absoluteIndex ? null : absoluteIndex))} className="p-1.5 focus:outline-none" aria-label="Expand row">
+                              {expanded === absoluteIndex ? <Minus className="w-4 h-4 text-blue-600" /> : <Plus className="w-4 h-4 text-blue-600" />}
+                            </button>
                           </td>
-                        ))}
-                      </tr>
-                      {expanded === idx && (
-                        <tr>
-                          <td colSpan={tableHeaders.length + 1} className="bg-gradient-to-r from-blue-50 to-green-50 px-8 py-6 text-gray-700">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                              {tableHeaders.map((header) => (
-                                <div key={header} className="flex gap-2 items-baseline">
-                                  <span className="font-semibold text-blue-800 min-w-[150px]">{header}:</span>
-                                  <span className="text-gray-800">{row[header] || <span className="text-gray-400 italic">N/A</span>}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
+                          {tableHeaders.map((header) => (
+                            <td key={header} className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900">
+                              {row[header] || <span className="text-gray-400 italic">N/A</span>}
+                            </td>
+                          ))}
                         </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
+                        {expanded === absoluteIndex && (
+                          <tr>
+                            <td colSpan={tableHeaders.length + 1} className="bg-gradient-to-r from-blue-50 to-green-50 px-8 py-6 text-gray-700">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                                {tableHeaders.map((header) => (
+                                  <div key={header} className="flex gap-2 items-baseline">
+                                    <span className="font-semibold text-blue-800 min-w-[150px]">{header}:</span>
+                                    <span className="text-gray-800">{row[header] || <span className="text-gray-400 italic">N/A</span>}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
@@ -261,6 +311,41 @@ export default function ModuleDetailPage() {
               </div>
             )}
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 px-1 pt-4 border-t border-blue-100">
+              <span className="text-sm font-medium text-gray-700">
+                Showing <span className="font-bold text-blue-800">{startIndex + 1}</span>
+                {' to '}
+                <span className="font-bold text-blue-800">{Math.min(endIndex, tableData.length)}</span>
+                {' of '}
+                <span className="font-bold text-blue-800">{tableData.length}</span> results
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center justify-center rounded-lg border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Go to previous page"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+                <span className="text-sm font-medium text-gray-700">
+                  Page <span className="font-bold">{currentPage}</span> of <span className="font-bold">{totalPages}</span>
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center justify-center rounded-lg border border-blue-600 bg-white px-3 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-50"
+                  aria-label="Go to next page"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-10">
@@ -268,11 +353,12 @@ export default function ModuleDetailPage() {
             <h2 className="text-2xl font-bold text-blue-800 mb-4">Reported Cases by Centre (Map)</h2>
             <MapContainer center={[26.5825, 88.7237]} zoom={11} scrollWheelZoom={false} style={{ height: 350, width: "100%" }}>
               <TileLayer attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {/* Add Marker logic here in the future if location data becomes available */}
             </MapContainer>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ModuleDetailPage;

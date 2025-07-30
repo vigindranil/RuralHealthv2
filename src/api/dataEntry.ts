@@ -272,3 +272,115 @@ export async function saveNonMatriMa(info: NonMatriMaPayload) {
   );
   return data; 
 }
+
+
+
+export interface HealthCentrePayload {
+  InHealthCentreID: string; // "0" for a new entry, or the ID for an update
+  GPID: string;
+  HealthCentreCodeNo: string;
+  HealthCentreName: string;
+  ANMName: string;
+  ANMContactNo: string;
+  CHOName: string;
+  CHOContactNo: string;
+  SCLocation: string;
+  LandOwnerName: string;
+  LandOwnerContactNo: string;
+  LandOwnerAddress: string;
+  OwnerShipTypeID: string; // "1" for OWN, "2" for RENTED, "3" for GOVT.
+  IsExaminationRoomAvailable: string; // "1" for Yes, "0" for No
+  IsLabRoomAvailable: string;
+  IsMedicineStoreAvailable: string;
+  IsWaitingAreaAvailable: string;
+  IsToiletAvailable: string;
+  IsPowerSupplyAvailable: string;
+  IsWaterSupplyAvailable: string;
+  IsInternetAvailable: string;
+  Remarks: string;
+  EntryUserID: string;
+}
+
+
+export const saveHealthCentreInfo = async (payload: HealthCentrePayload) => {
+  const token = Cookies.get('authToken');
+  if (!token) {
+    throw new Error('Authentication token not found. Please log in.');
+  }
+
+  try {
+    const { data } = await axios.post(
+      `${BASE_URL}/save-health-centre-info`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+     
+      throw new Error(error.response.data.message || 'An API error occurred while saving.');
+    }
+    // Fallback for network errors or other issues
+    throw new Error('A network error occurred. Please try again.');
+  }
+};
+
+
+
+export interface ICDSPayload {
+  InICDSCentreID: string;
+  GPID: string;
+  AWCNo: string;
+  AWCName: string;
+  VillageName: string;
+  AWWName: string;
+  AWWContactNo: string;
+  AWHName: string;
+  AWHContactNo: string;
+  AWCLocation: string;
+  AWCLocationContactNo: string;
+  LandOwnerName: string;
+  LandOwnerContactNo: string;
+  OwnerShipTypeID: string;
+  IsKitchenAvailable: string;
+  IsStoreRoomAvailable: string;
+  IsToiletAvailable: string;
+  Remarks: string;
+  EntryUserID: string;
+}
+
+// --- API Function ---
+export const saveICDSCentreInfo = async (payload: ICDSPayload) => {
+  const token = Cookies.get('authToken');
+  if (!token) {
+    throw new Error('Authentication token not found. Please log in.');
+  }
+
+  try {
+    const { data } = await axios.post(
+      `${BASE_URL}/save-icds-centre-info`, // MODIFIED: URL endpoint
+      payload,                            // The payload with ICDS data
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    // The API returns a response like { status: 0, message: "..." }
+    // We return the whole data object so the component can check the status and message.
+    return data;
+  } catch (error) {
+    // This provides detailed error messages back to the component.
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.message || 'An API error occurred while saving.');
+    }
+    // Fallback for network errors or other issues not from the API response
+    throw new Error('A network error occurred. Please try again.');
+  }
+};

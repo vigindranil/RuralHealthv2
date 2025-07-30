@@ -70,6 +70,7 @@ export default function GPProfile(): JSX.Element {
 
   // Fetch initial profile data when the component loads
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchGpProfile = async () => {
       if (!boundaryId || !userId || !boundaryLevelId) {
         setError('Missing required user information from token.');
