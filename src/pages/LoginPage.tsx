@@ -125,7 +125,7 @@ export default function LoginPage() {
               <Heart className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Rural Health Monitor</h1>
+              <h1 className="text-3xl font-bold text-white">GP Profile Monitor</h1>
               <p className="text-blue-100">Transforming Healthcare Access</p>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 <Heart className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Rural Health Monitor</h1>
+                <h1 className="text-2xl font-bold text-gray-900">GP Profile Monitor</h1>
                 <p className="text-gray-600 text-sm">Secure Access Portal</p>
               </div>
             </div>

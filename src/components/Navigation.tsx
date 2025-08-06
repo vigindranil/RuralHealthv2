@@ -69,7 +69,7 @@ export default function Navigation() {
             <div className="bg-blue-600 p-2 rounded-lg">
               <Heart className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Rural Health Monitor</span>
+            <span className="text-xl font-bold text-gray-900">GP Profile Monitor</span>
           </div>
 
           {/* Navigation Links */}

@@ -54,24 +54,24 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 z-0">
-  {/* Faint blended background image */}
-  <div
-    className="absolute inset-0"
-    style={{
-      backgroundImage: "url('https://www.s-parking.com/assets/gp2.jpg')",
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      opacity: 0.18,
-      pointerEvents: 'none',
-      zIndex: 0,
-    }}
-  />
-  {/* Existing blue/green gradients and blobs */}
-  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 via-transparent to-green-600/20"></div>
-  <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
-  <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
-  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-white/5 to-transparent rounded-full"></div>
-</div>
+        {/* Faint blended background image */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url('https://www.s-parking.com/assets/gp2.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.18,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        {/* Existing blue/green gradients and blobs */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 via-transparent to-green-600/20"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-white/5 to-transparent rounded-full"></div>
+      </div>
 
       {/* Header */}
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
@@ -84,7 +84,7 @@ export default function LandingPage() {
                 className="w-12 h-12 rounded-xl border-2 border-blue-400 shadow-md bg-white object-contain"
               />
               <div>
-                <span className="text-2xl font-bold text-white">Rural Health Monitor</span>
+                <span className="text-2xl font-bold text-white">GP Profile Monitoring System</span>
                 <p className="text-blue-200 text-sm">Transforming Healthcare</p>
               </div>
             </div>
@@ -117,13 +117,13 @@ export default function LandingPage() {
             <div className="mb-8">
               <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/20 text-blue-700 text-sm font-medium backdrop-blur-sm border border-blue-400/30 animate-fadein" style={{ animationDelay: '0.4s' }}>
                 <Award className="w-4 h-4 mr-2" />
-                 Health Monitoring Platform
+                Health Monitoring Platform
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-extrabold text-blue-900 mb-8 leading-tight drop-shadow animate-fadein-slideup" style={{ animationDelay: '0.35s' }}>
               Transforming
               <span className="bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent block">
-                Rural Healthcare
+                GP Profile Monitoring
               </span>
               <span className="text-4xl md:text-5xl">Monitoring</span>
             </h1>
@@ -197,7 +197,7 @@ export default function LandingPage() {
               Our platform provides end-to-end health monitoring solutions with cutting-edge technology
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:transform hover:scale-105">
@@ -221,11 +221,11 @@ export default function LandingPage() {
               Track critical health indicators across all demographics
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               "Maternal Health Tracking",
-              "Child Immunization Records", 
+              "Child Immunization Records",
               "Malnutrition Monitoring",
               "Infectious Disease Surveillance",
               "Adolescent Health Programs",
@@ -251,7 +251,7 @@ export default function LandingPage() {
               Trusted by Healthcare Professionals
             </h2>
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
             {testimonials.map((testimonial, index) => (
               <div key={index} className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20">
@@ -276,10 +276,10 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-gradient-to-r from-blue-500/20 to-green-500/20 backdrop-blur-md rounded-3xl p-12 border border-white/20">
             <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to Transform Rural Healthcare?
+              Ready to Monitor GP Profiles?
             </h2>
             <p className="text-xl text-blue-100 mb-8">
-              Join thousands of healthcare professionals already using our platform
+              Join thousands of GP professionals already using our platform
             </p>
             <button
               onClick={() => navigate('/login')}
@@ -299,12 +299,12 @@ export default function LandingPage() {
               <Heart className="w-8 h-8 text-white" />
             </div>
             <div>
-              <span className="text-2xl font-bold text-white">Rural Health Monitor</span>
+              <span className="text-2xl font-bold text-white">GP Profile Monitor</span>
               <p className="text-blue-200 text-sm">Transforming Healthcare</p>
             </div>
           </div>
           <div className="text-center text-blue-200">
-            <p>&copy; 2025 Rural Health Monitoring System. Building healthier communities through technology.</p>
+            <p>&copy; 2025 GP Profile Monitoring System. Building healthier communities through technology.</p>
           </div>
         </div>
       </footer>

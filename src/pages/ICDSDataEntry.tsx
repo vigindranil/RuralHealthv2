@@ -487,7 +487,7 @@ const ICDSDataEntry: FC = () => {
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default ICDSDataEntry;
