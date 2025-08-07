@@ -1,64 +1,95 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, LayoutDashboard, FileText, BarChart3, LogOut, User } from 'lucide-react';
-import Cookies from 'js-cookie'; // For cookie handling
-import { decodeJwtToken } from '../utils/decodetoken'; // Only allowed util import
+import Cookies from 'js-cookie';
+import { decodeJwtToken } from '../utils/decodetoken';
 
-export default function Navigation() {
+// --- TYPE DEFINITIONS for strong typing ---
+
+// 1. Define the structure of the user profile stored in state
+interface UserProfile {
+  name: string;
+  userTypeID: number;
+  roleName: string;
+}
+
+// 2. Define the expected structure of the decoded JWT payload
+interface DecodedToken {
+  UserFullName: string;
+  UserTypeID: number;
+  // Add other JWT standard claims if needed, e.g., exp: number;
+}
+
+// 3. Define the structure for a navigation item
+interface NavItem {
+  path: string;
+  label: string;
+  icon: ReactNode; // A ReactNode can be any valid JSX
+}
+
+// Define UserTypeIDs as a const for better readability and maintenance
+const USER_TYPE_IDS = {
+  DISTRICT_ADMIN: 200,
+  GP_ADMIN: 600,
+};
+
+
+export default function Navigation(): JSX.Element | null {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<any>(null); // User state from decoded token
 
-  // Decode token and set user on mount
+  // Typed state: UserProfile or null. No more 'any'.
+  const [user, setUser] = useState<UserProfile | null>(null);
+
   useEffect(() => {
     const token = Cookies.get('authToken');
     if (token) {
-      const decoded = decodeJwtToken(token);
-      if (decoded) {
-        // Map role based on UserTypeID or UserTypeName (matching Dashboard logic)
-        let mappedRole = 'GP'; // Default fallback
-        if (decoded.UserTypeID === 200 || decoded.UserTypeName === 'DistrictAdmin') {
-          mappedRole = 'District Admin';
-        } else if (decoded.UserTypeName === 'ICDS') {
-          mappedRole = 'ICDS Centre';
-        } else if (decoded.UserTypeName === 'Health') {
-          mappedRole = 'Health Centre';
+      // Assume decodeJwtToken returns DecodedToken or null
+      const decoded = decodeJwtToken(token) as DecodedToken | null;
+
+      if (decoded && decoded.UserTypeID) {
+        const userTypeID = decoded.UserTypeID;
+        let roleName = 'User'; // Default
+
+        if (userTypeID === USER_TYPE_IDS.DISTRICT_ADMIN) {
+          roleName = 'District Admin';
+        } else if (userTypeID === USER_TYPE_IDS.GP_ADMIN) {
+          roleName = 'GP Admin';
         }
 
         setUser({
           name: decoded.UserFullName,
-          role: mappedRole,
-          // Add other fields if needed
+          userTypeID: userTypeID,
+          roleName: roleName,
         });
       } else {
-        // Invalid token: clear cookies and redirect to login
-        Cookies.remove('authToken');
-        Cookies.remove('userTypeID');
-        navigate('/login');
+        handleLogout(true); // Invalid token, force redirect to login
       }
     } else {
-      // No token: redirect to login (though ProtectedRoute should handle this)
       navigate('/login');
     }
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]); // navigate is stable and can be a dependency
 
-  // If user is not loaded yet, show a placeholder or nothing
+  const handleLogout = (redirectToLogin: boolean = false): void => {
+    Cookies.remove('authToken');
+    Cookies.remove('userTypeID');
+    navigate(redirectToLogin ? '/login' : '/');
+  };
+
   if (!user) {
-    return null; // Or a loading spinner if preferred
+    // Return null (or a loading skeleton) while user is being authenticated
+    return null;
   }
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { path: '/data-entry', label: 'Data Entry', icon: <FileText className="w-5 h-5" /> },
     { path: '/reports', label: 'Reports', icon: <BarChart3 className="w-5 h-5" /> },
   ];
 
-  const handleLogout = () => {
-    // Clear cookies instead of performLogout
-    Cookies.remove('authToken');
-    Cookies.remove('userTypeID');
-    navigate('/');
-  };
+  // Condition is now type-safe, checking against the number in the user profile
+  const canSeeDataEntry = user.userTypeID === USER_TYPE_IDS.GP_ADMIN;
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
@@ -72,17 +103,16 @@ export default function Navigation() {
             <span className="text-xl font-bold text-gray-900">GP Profile Monitor</span>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links (Desktop) */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              // **MODIFIED**: Only show Data Entry for 'GP' users. This now hides it for District Admins.
-              (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
+              (item.path === '/data-entry' && !canSeeDataEntry) ? null : (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname.startsWith(item.path)
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                 >
                   {item.icon}
@@ -98,14 +128,14 @@ export default function Navigation() {
               <div className="bg-gray-100 p-2 rounded-lg">
                 <User className="w-4 h-4 text-gray-600" />
               </div>
-              <div className="text-sm">
-                <div className="font-medium text-gray-900">{user?.name}</div>
-                {/* <div className="text-gray-500">{user?.role}</div> */}
+              <div className="text-sm text-right">
+                <div className="font-medium text-gray-900">{user.name}</div>
+                <div className="text-gray-500">{user.roleName}</div>
               </div>
             </div>
 
             <button
-              onClick={handleLogout}
+              onClick={() => handleLogout()}
               className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
             >
               <LogOut className="w-5 h-5" />
@@ -116,16 +146,15 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden py-3 border-t border-gray-200">
-          <div className="flex space-x-1">
+          <div className="flex justify-around space-x-1">
             {navItems.map((item) => (
-              // This logic was already correct: only show Data Entry for 'GP' users.
-              (item.path === '/data-entry' && user?.role !== 'GP') ? null : (
+              (item.path === '/data-entry' && !canSeeDataEntry) ? null : (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname === item.path
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  className={`flex-1 flex flex-col items-center justify-center space-y-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${location.pathname.startsWith(item.path)
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                 >
                   {item.icon}

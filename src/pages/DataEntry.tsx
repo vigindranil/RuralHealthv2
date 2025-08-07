@@ -22,6 +22,8 @@ export default function DataEntry() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  console.log("User role:", role); // Debug log for user role
+
   useEffect(() => {
     const fetchDataEntries = async () => {
       try {
@@ -64,25 +66,25 @@ export default function DataEntry() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-white to-green-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Data Entry</h1>
-        <p className="text-gray-600 mt-2">
-          {role === "GPAdmin"
-            ? "Select a module to enter new data"
-            : "Data entry is restricted to GP users only"}
-        </p>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-          <p className="text-red-800">{error}</p>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Data Entry</h1>
+          {/* <p className="text-gray-600 mt-2">
+            {role === "GPAdmin"
+              ? "Select a module to enter new data"
+              : "Data entry is restricted to GP users only"}
+          </p> */}
         </div>
-      )}
 
-      {/* Access Notice for Non-GP Users */}
-      {role !== "GPAdmin" && (
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Access Notice for Non-GP Users */}
+        {/* {role !== "GPAdmin" && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
           <div className="flex items-center space-x-2">
             <FileText className="w-5 h-5 text-yellow-600" />
@@ -93,113 +95,113 @@ export default function DataEntry() {
             </p>
           </div>
         </div>
-      )}
+      )} */}
 
-      {/* Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modules?.map((module) => (
+        {/* Modules Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modules?.map((module) => (
+            <div
+              key={module.HMTypeID}
+              onClick={() => handleModuleClick(module.HMTypeID)}
+              className={`bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border 
+                ? "cursor-pointer hover:border-blue-300"
+                : "cursor-not-allowed opacity-60"
+                }`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="text-3xl">
+                  {moduleEmojis[module?.HMTypeName] || moduleEmojis.default}
+                </div>
+                <div className="flex items-center space-x-2">
+
+                  {(role === "GP Admin" || role === "DistrictAdmin") && (
+                    <Plus className="w-5 h-5 text-blue-600" />
+                  )}
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {module?.HMTypeName}
+              </h3>
+              <p className="text-gray-600 text-sm">{module?.HMDescription || 'No description available'}</p>
+            </div>
+          ))}
           <div
-            key={module.HMTypeID}
-            onClick={() => handleModuleClick(module.HMTypeID)}
-            className={`bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border ${(role === "GPAdmin" || role === "DistrictAdmin")
-              ? "cursor-pointer hover:border-blue-300"
-              : "cursor-not-allowed opacity-60"
-              }`}
+            onClick={() => navigate("/icds-data-entry")}
+            className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="text-3xl">
-                {moduleEmojis[module?.HMTypeName] || moduleEmojis.default}
+                <Building className="w-8 h-8 text-green-500" />
               </div>
               <div className="flex items-center space-x-2">
-                
-                {(role === "GPAdmin" || role === "DistrictAdmin") && (
-                  <Plus className="w-5 h-5 text-blue-600" />
-                )}
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  ICDS
+                </span>
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {module?.HMTypeName}
+              ICDS Centre Data Entry
             </h3>
-            <p className="text-gray-600 text-sm">{module?.HMDescription || 'No description available'}</p>
+            <p className="text-gray-600 text-sm">
+              Enter or update details for your Anganwadi/ICDS Centre.
+            </p>
           </div>
-        ))}
-        <div
-          onClick={() => navigate("/icds-data-entry")}
-          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="text-3xl">
-              <Building className="w-8 h-8 text-green-500" />
+
+          <div
+            onClick={() => navigate("/health-centre-data-entry")}
+            className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="text-3xl">
+                <Building className="w-8 h-8 text-green-500" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  Health Centre
+                </span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                ICDS
-              </span>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Health Centre Data Entry
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Enter or update details for your Health Centre.
+            </p>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            ICDS Centre Data Entry
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Enter or update details for your Anganwadi/ICDS Centre.
-          </p>
+
+
+          {role === "GP Admin" && <div
+            onClick={() => navigate("/gp-profile")}
+            className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="text-3xl">
+                <User className="w-8 h-8 text-yellow-500" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                  Profile
+                </span>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Edit Your GP Profile
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Enter or update details your GP profile
+            </p>
+          </div>}
         </div>
 
-        <div
-          onClick={() => navigate("/health-centre-data-entry")}
-          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="text-3xl">
-              <Building className="w-8 h-8 text-green-500" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                Health Centre
-              </span>
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Health Centre Data Entry
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Enter or update details for your Health Centre.
-          </p>
-        </div>
-
-
-       {role === "GPAdmin" && <div
-          onClick={() => navigate("/gp-profile")}
-          className="bg-white/70 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 border cursor-pointer hover:border-green-400"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="text-3xl">
-              <User className="w-8 h-8 text-yellow-500" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-               Profile
-              </span>
-            </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Edit Your GP Profile
-          </h3>
-          <p className="text-gray-600 text-sm">
-            Enter or update details your GP profile
-          </p>
-        </div>}
-      </div>
-
-      {/* Form Modal */}
-      <FormModal
-        moduleId={selectedModule}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedModule(null);
-        }}
-      />
+        {/* Form Modal */}
+        <FormModal
+          moduleId={selectedModule}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedModule(null);
+          }}
+        />
       </div>
     </div>
   );
