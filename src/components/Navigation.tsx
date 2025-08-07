@@ -100,7 +100,7 @@ export default function Navigation() {
               </div>
               <div className="text-sm">
                 <div className="font-medium text-gray-900">{user?.name}</div>
-                <div className="text-gray-500">{user?.role}</div>
+                {/* <div className="text-gray-500">{user?.role}</div> */}
               </div>
             </div>
 
