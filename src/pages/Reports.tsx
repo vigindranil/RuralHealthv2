@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import DataTable from '../components/DataTable';
 import FilterSection from '../components/FilterSection';
 import MetricsSection from '../components/MetricsSection'; // Ensure this path is correct
-import { fetchGpProfileReport, ReportFilters } from '../api/reportsApi'; // Ensu.re path is correct
-
+import { fetchGpProfileReport, ReportFilters } from '../api/reportsApi';
 // A generic wrapper for each table to include title and export button
 const TableWrapper = ({ title, onExport, children }: { title: string, onExport: () => void, children: React.ReactNode }) => (
   <div className="bg-white rounded-lg shadow-md p-6">
