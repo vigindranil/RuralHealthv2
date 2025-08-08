@@ -7,12 +7,12 @@ interface StatsCardProps {
   change: string;
   trending: 'up' | 'down';
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'red' | 'purple' | string;
+  color: 'blue' | 'green' | 'red' | 'purple' | 'yellow' | string; // Added yellow for completeness
   onClick?: () => void;
 }
 
 // Color mapping for the icon background
-const colorClasses = {
+const colorClasses: Record<string, string> = {
   blue: 'bg-blue-100 text-blue-600',
   green: 'bg-green-100 text-green-600',
   red: 'bg-red-100 text-red-600',
@@ -21,14 +21,12 @@ const colorClasses = {
 };
 
 // Helper to get color class or provide a fallback
-const getColorClasses = (colorName: string) => {
-  return colorClasses[colorName as keyof typeof colorClasses] || colorClasses.blue;
+const getColorClasses = (colorName: string): string => {
+  return colorClasses[colorName] || colorClasses.blue;
 }
 
 export default function StatsCard({ title, value, change, trending, icon, color, onClick }: StatsCardProps) {
   const isLongTitle = title.length > 45;
-
-  // The JavaScript style injection has been removed.
 
   return (
     <div
@@ -40,7 +38,7 @@ export default function StatsCard({ title, value, change, trending, icon, color,
       `}
       onClick={onClick}
     >
-      {/* Gradient Border Accent - now using arbitrary values for the gradient colors */}
+      {/* Gradient Border Accent - no changes needed here */}
       <div
         className="
           absolute inset-0 rounded-2xl pointer-events-none border-2 border-transparent 
@@ -49,7 +47,7 @@ export default function StatsCard({ title, value, change, trending, icon, color,
         "
       />
 
-      {/* Floating Icon with Animation - using the new `animate-float` utility */}
+      {/* Floating Icon - no changes needed here */}
       <div
         className={`
           absolute -top-7 left-1/2 -translate-x-1/2 z-10 rounded-full p-3 border-4 border-white 
@@ -64,13 +62,13 @@ export default function StatsCard({ title, value, change, trending, icon, color,
       <div className="flex flex-col items-center justify-center text-center flex-grow pt-7 relative z-10">
         <h3 className="text-4xl font-extrabold text-gray-900 mb-1 drop-shadow-sm tracking-tight">{value}</h3>
 
-        {/* Title with dynamic font size and reserved space */}
         <div className="min-h-[56px] flex items-center justify-center w-full mb-1">
           <p className={`font-semibold text-gray-700 ${isLongTitle ? 'text-sm' : 'text-base'} leading-tight`}>{title}</p>
         </div>
 
-        {/* Change Indicator as Pill */}
-        <div className="flex items-center justify-center mt-1">
+        {/* --- CHANGE IS HERE --- */}
+        {/* Change Indicator now fades out on hover */}
+        <div className="flex items-center justify-center mt-1 transition-opacity duration-200 group-hover:opacity-0">
           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold shadow-sm
             ${trending === 'up' && change !== '0' ? 'bg-green-100 text-green-700' : trending === 'down' && change !== '0' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}
           >
@@ -80,9 +78,9 @@ export default function StatsCard({ title, value, change, trending, icon, color,
         </div>
       </div>
 
-      {/* More Details Link */}
+      {/* More Details Link - already correctly fades in */}
       {onClick && (
-        <div className="absolute bottom-4 right-6 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <div className="absolute bottom-4 w-full flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 duration-200">
           <button
             className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs px-3 py-1 rounded-full shadow focus:outline-none border border-blue-200 transition-colors"
             onClick={e => { e.stopPropagation(); onClick && onClick(); }}

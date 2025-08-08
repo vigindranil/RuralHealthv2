@@ -10,8 +10,8 @@ module.exports = {
         },
         
         float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '0%, 100%': { transform: 'translateX(-50%) translateY(0px)' },
+          '50%': { transform: 'translateX(-50%) translateY(-10px)' },
         },
       },
       animation: {
