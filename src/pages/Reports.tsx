@@ -40,12 +40,14 @@ export default function WorkInProgress() {
   }, []);
 
   // On initial component mount, fetch data with no date filters.
-  useEffect(() => {
+ useEffect(() => {
     const initialFilters: ReportFilters = {
       fromDate: null,
       toDate: null,
-      block: 'ALL',
-      gp: 'ALL'
+      blockId: null,
+      blockLevelId: null,
+      gpId: null,
+      gpLevelId: null,
     };
     loadReportData(initialFilters);
   }, [loadReportData]);

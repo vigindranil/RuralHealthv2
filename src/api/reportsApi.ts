@@ -34,8 +34,10 @@ export interface GpProfileReportData {
 export interface ReportFilters {
     fromDate: string | null;
     toDate: string | null;
-    block: string;
-    gp: string;
+    blockId: number | null;
+    blockLevelId: number | null;
+    gpId: number | null;
+    gpLevelId: number | null;
 }
 
 /**
@@ -57,6 +59,8 @@ export interface GpProfileReportData {
   };
 }
 
+
+
 /**
  * Fetches the GP Profile Report.
  * It takes date filters from the component and combines them with
@@ -71,13 +75,24 @@ export const fetchGpProfileReport = async (filters: ReportFilters): Promise<GpPr
     throw new Error('Invalid token: Required user or boundary information is missing.');
   }
 
-  // **KEY FIX**: This payload now correctly includes FromDate and ToDate from the filters.
+  // Determine the most specific boundary to use for the report
+  let finalBoundaryId = decoded.BoundaryID;
+  let finalBoundaryLevelId = decoded.BoundaryLevelID;
+
+  if (filters.gpId && filters.gpLevelId) {
+    finalBoundaryId = filters.gpId;
+    finalBoundaryLevelId = filters.gpLevelId;
+  } else if (filters.blockId && filters.blockLevelId) {
+    finalBoundaryId = filters.blockId;
+    finalBoundaryLevelId = filters.blockLevelId;
+  }
+  
   const payload = {
     UserID: decoded.UserID,
-    BoundaryLevelID: decoded.BoundaryLevelID, 
-    BoundaryID: decoded.BoundaryID,
-    FromDate: filters.fromDate, // This will be passed from the component state
-    ToDate: filters.toDate,     // This will also be passed from the component state
+    BoundaryLevelID: finalBoundaryLevelId, 
+    BoundaryID: finalBoundaryId,
+    FromDate: filters.fromDate,
+    ToDate: filters.toDate,
   };
 
   const response = await fetch(`${BASE_URL}/get-gp-profile-report`, {
@@ -91,4 +106,41 @@ export const fetchGpProfileReport = async (filters: ReportFilters): Promise<GpPr
   if (result.status !== 0) throw new Error(result.message || "Failed to fetch a valid report.");
   
   return result.data;
+};
+
+
+export interface Boundary {
+  InnerBoundaryLevelID: number;
+  InnerBoundaryID: number;
+  InnerBoundaryName: string;
+}
+
+
+export const fetchBoundaryDetails = async (boundaryId: string, boundaryLevelId: string): Promise<Boundary[]> => {
+  const token = Cookies.get('authToken');
+  if (!token) throw new Error('Authentication token not found.');
+
+  const decoded = decodeJwtToken(token);
+  if (!decoded || !decoded.UserID) {
+    throw new Error('Invalid token: UserID is missing.');
+  }
+
+  const payload = {
+    BoundaryID: boundaryId,
+    BoundaryLevelID: boundaryLevelId,
+    IsUrban: "0", // As per your example
+    LoginUserID: decoded.UserID.toString(),
+  };
+
+  const response = await fetch(`${BASE_URL}/get-boundary-details-by-boundary-id`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
+  const result = await response.json();
+  if (result.status !== 0) throw new Error(result.message || "Failed to fetch boundary details.");
+  
+  return result.data || [];
 };
