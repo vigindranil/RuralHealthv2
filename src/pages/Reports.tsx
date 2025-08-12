@@ -1,110 +1,202 @@
 import { useState, useEffect, useCallback } from 'react';
-import DataTable from '../components/DataTable';
+import DataTable, { ColumnDef } from '../components/DataTable';
 import FilterSection from '../components/FilterSection';
-import MetricsSection from '../components/MetricsSection'; // Ensure this path is correct
+import MetricsSection from '../components/MetricsSection';
 import { fetchGpProfileReport, ReportFilters } from '../api/reportsApi';
-// A generic wrapper for each table to include title and export button
-const TableWrapper = ({ title, onExport, children }: { title: string, onExport: () => void, children: React.ReactNode }) => (
-  <div className="bg-white rounded-lg shadow-md p-6">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-      <button onClick={onExport} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-semibold">
-        Export to Excel
-      </button>
-    </div>
-    {children}
-  </div>
-);
+import { FileDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
+// --- NEW COMPONENT: ReportSection ---
+// This component provides the header (Title, Count, Export) and correctly
+// configures the DataTable for row-by-row expansion.
+interface ReportSectionProps<T> {
+  title: string;
+  data: T[];
+  mainColumns: ColumnDef<T>[];
+  allColumns: ColumnDef<T>[];
+  isLoading: boolean;
+}
+
+const ReportSection = <T extends Record<string, any>>({
+  title,
+  data,
+  mainColumns,
+  allColumns,
+  isLoading,
+}: ReportSectionProps<T>) => {
+
+  const handleExport = () => {
+    if (!data || data.length === 0) {
+      alert('No data to export.');
+      return;
+    }
+
+    // Use the allColumns definition to prepare data for export, ensuring all fields are included
+    const exportData = data.map(row => {
+      const newRow: Record<string, any> = {};
+      allColumns.forEach(col => {
+        const key = col.header;
+        // @ts-ignore - accessorFn makes it hard for TS to infer the type of `row` correctly
+        const value = col.accessorFn ? col.accessorFn(row) : row[col.accessorKey];
+        newRow[key] = (value !== 'N/A' && value !== null) ? value : ''; // Export empty string instead of N/A
+      });
+      return newRow;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`;
+    saveAs(new Blob([excelBuffer]), fileName);
+  };
+
+  const renderRowDetails = (row: T) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+      {allColumns.map((col) => {
+        // @ts-ignore - accessorFn makes it hard for TS to infer the type of `row` correctly
+        const value = col.accessorFn ? col.accessorFn(row) : row[col.accessorKey];
+        return (
+          <div key={col.header} className="flex gap-2 items-baseline">
+            <span className="font-semibold text-gray-600 min-w-[150px]">{col.header}:</span>
+            <span className="text-gray-800">{value || <span className="text-gray-400 italic">N/A</span>}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-lg shadow-xl p-6 border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h3 className="text-xl font-bold text-gray-800">
+          {title} <span className="text-base font-medium text-gray-500">({data.length} Records)</span>
+        </h3>
+        <button
+          onClick={handleExport}
+          disabled={!data || data.length === 0 || isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          <FileDown size={16} /> Export to Excel
+        </button>
+      </div>
+      <DataTable
+        data={data}
+        columns={mainColumns}
+        isLoading={isLoading}
+        isExpandable={true}
+        renderExpandedRow={renderRowDetails}
+      />
+    </div>
+  );
+};
+
+// --- Main Component ---
 export default function WorkInProgress() {
   const [metricsData, setMetricsData] = useState<any>(null);
   const [reportData, setReportData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // This function now handles the API call with the correct filters.
   const loadReportData = useCallback(async (filters: ReportFilters) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true); setError(null);
     try {
       const data = await fetchGpProfileReport(filters);
-      setMetricsData(data.health_metrics_overview);
-      setReportData(data.sections);
+      setMetricsData(data.health_metrics_overview); setReportData(data.sections);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
-      setMetricsData(null); // Clear old data on error
-      setReportData(null);
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   }, []);
 
-  // On initial component mount, fetch data with no date filters.
- useEffect(() => {
-    const initialFilters: ReportFilters = {
-      fromDate: null,
-      toDate: null,
-      blockId: null,
-      blockLevelId: null,
-      gpId: null,
-      gpLevelId: null,
-    };
-    loadReportData(initialFilters);
-  }, [loadReportData]);
+  useEffect(() => { loadReportData({}); }, [loadReportData]);
+  const handleFilter = (filters: ReportFilters) => { loadReportData(filters); };
+  const handleGlobalExport = () => alert('Global Export not implemented.');
 
-  // This function is called by FilterSection when the user clicks "Submit".
-  const handleFilter = (filters: ReportFilters) => {
-    console.log('Applying new filters to fetch report:', filters);
-    loadReportData(filters);
-  };
+  // --- COMPLETE & DEDICATED COLUMN DEFINITIONS ---
+  // Each section now has its own complete set of columns based on the API response.
 
-  const handleGlobalExport = () => alert('Global Export functionality would be implemented here');
-  const handleExportTable = (tableName: string) => alert(`Exporting "${tableName}" to Excel...`);
+  const nameAccessor = (row: any) => row.name || row.MotherName || row.GirlName || row.patient_name || 'N/A';
+  const husbandAccessor = (row: any) => row.husband_name || row.HusbandName || row.father_name || 'N/A';
+  const contactAccessor = (row: any) => row.phone_number || row.ContactNumber || 'N/A';
+  const icdsNameAccessor = (row: any) => row.icds_center_name || row.ICDSCentreName || 'N/A';
+  const icdsCodeAccessor = (row: any) => row.icds_code || row.ICDSCentreCode || 'N/A';
+  const healthNameAccessor = (row: any) => row.health_center_name || row.HealthCentreName || 'N/A';
 
-  // --- Column Definitions (Unchanged from your original code) ---
-  const motherColumns = [{ header: 'Name', accessorKey: 'name' }, { header: 'District', accessorKey: 'district' }, { header: 'Block', accessorKey: 'block' }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'Village Name', accessorKey: 'village' }, { header: 'Husband Name', accessorKey: 'husband_name' }, { header: 'Phone Number', accessorKey: 'phone_number' }, { header: 'ICDS Centre Name', accessorKey: 'icds_center_name' }, { header: 'ICDS Centre ID', accessorKey: 'icds_code' }, { header: 'Health Centre Name', accessorKey: 'health_center_name' }];
-  const childColumns = [{ header: 'Name', accessorKey: 'name' }, { header: 'District', accessorKey: 'district' }, { header: 'Block', accessorKey: 'block' }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'Village Name', accessorKey: 'village' }, { header: "Father's Name", accessorKey: 'father_name' }, { header: 'Phone Number', accessorKey: 'phone_number' }, { header: 'ICDS Centre Name', accessorKey: 'icds_center_name' }, { header: 'ICDS Centre ID', accessorKey: 'icds_code' }, { header: 'Health Centre Name', accessorKey: 'health_center_name' }];
-  const infectiousDiseaseColumns = [{ header: 'Infectious Disease', accessorKey: 'disease' }, { header: 'Affected Person Name', accessorKey: 'patient_name' }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'Village Name', accessorKey: 'village' }, { header: 'Contact No', accessorKey: 'phone_number' }, { header: 'ICDS Centre Name', accessorKey: 'icds_center_name' }, { header: 'Health Centre Name', accessorKey: 'health_center_name' }];
-  const tbLeprosyColumns = [{ header: 'Patient Name', accessorKey: 'name' }, { header: 'Village Name', accessorKey: 'village' }, { header: 'Contact No', accessorKey: 'phone_number' }, { header: 'ICDS Centre Name', accessorKey: 'icds_center_name' }, { header: 'Health Centre Name', accessorKey: 'health_center_name' }];
-  const adolescentGirlsColumns = [{ header: 'Name', accessorKey: 'name' }, { header: 'Date of Birth', accessorKey: 'dob' }, { header: 'Weight (kg)', accessorKey: 'weight_kg' }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'Village Name', accessorKey: 'village' }, { header: "Father's Name", accessorKey: 'father_name' }, { header: 'Contact No', accessorKey: 'phone_number' }, { header: 'ICDS Centre Name', accessorKey: 'icds_center_name' }, { header: 'Health Centre Name', accessorKey: 'health_center_name' }];
-  const icdsCentreColumns = [{ header: 'Anganwadi Center Code', accessorKey: 'code' }, { header: 'Anganwadi Center Name', accessorKey: 'center_name' }, { header: 'Village Name', accessorKey: 'village' }, { header: 'AWW Name', accessorKey: 'aww_name' }, { header: 'ASH Name', accessorKey: 'ash_name' }, { header: 'ASH Contact', accessorKey: 'ash_phone' }, { header: 'Location / Venue Name', accessorKey: 'location' }];
-  const healthCentreColumns = [{ header: 'Health Centre Code', accessorKey: 'code' }, { header: 'Health Centre Name', accessorKey: 'center_name' }, { header: 'ANM Name', accessorKey: 'anm_name' }, { header: 'ANM Contact', accessorKey: 'anm_number' }, { header: 'CHO Name', accessorKey: 'cho_name' }, { header: 'CHO Contact', accessorKey: 'cho_number' }, { header: 'Sub-Centre Location', accessorKey: 'location' }];
+  // 1. Mother/Girl Generic Columns (for Childbirths, Marriages, etc.)
+  const motherAllColumns = [
+    { header: 'Name', accessorFn: nameAccessor }, { header: 'District', accessorKey: 'district' }, { header: 'Block', accessorKey: 'block' }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'Village', accessorKey: 'village' }, { header: 'Husband/Father', accessorFn: husbandAccessor }, { header: 'Phone Number', accessorFn: contactAccessor }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, { header: 'ICDS Code', accessorFn: icdsCodeAccessor }, { header: 'Health Centre', accessorFn: healthNameAccessor }, { header: 'MatriMa ID', accessorKey: 'MatriMaID' }, { header: 'Health ID', accessorKey: 'HMID' }
+  ];
+  const motherMainColumns = [
+    { header: 'Name', accessorFn: nameAccessor }, { header: 'Husband/Father', accessorFn: husbandAccessor }, { header: 'Gram Panchayat (GP)', accessorKey: 'gp' }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, { header: 'Health Centre', accessorFn: healthNameAccessor },
+  ];
+
+  // 2. Child Generic Columns (for Low Birth Weight, Malnourished, etc.)
+  const childAllColumns = motherAllColumns; // Structure is identical
+  const childMainColumns = motherMainColumns; // Structure is identical
+
+  // 3. Anemic Adolescent Girls (Unique: dob, weight)
+  const anemicAdolescentGirlsAllColumns = [
+    { header: 'Name', accessorFn: nameAccessor }, { header: 'Date of Birth', accessorKey: 'dob' }, { header: 'Weight (kg)', accessorKey: 'weight_kg' }, { header: 'District', accessorKey: 'DistrictName' }, { header: 'Block', accessorKey: 'BlockName' }, { header: 'Gram Panchayat (GP)', accessorKey: 'GPName' }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'Father Name', accessorFn: husbandAccessor }, { header: 'Phone Number', accessorFn: contactAccessor }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, { header: 'ICDS Code', accessorFn: icdsCodeAccessor }, { header: 'Health Centre', accessorFn: healthNameAccessor }, { header: 'Health ID', accessorKey: 'HMID' }
+  ];
+  const anemicAdolescentGirlsMainColumns = [
+    { header: 'Name', accessorFn: nameAccessor }, { header: 'Date of Birth', accessorKey: 'dob' }, { header: 'Weight (kg)', accessorKey: 'weight_kg' }, { header: 'Gram Panchayat (GP)', accessorKey: 'GPName' }, { header: 'Health Centre', accessorFn: healthNameAccessor }
+  ];
+
+  // 4. Infectious Diseases (Unique: disease, patient_name)
+  const infectiousDiseasesAllColumns = [
+    { header: 'Disease', accessorKey: 'disease' }, { header: 'Patient Name', accessorFn: nameAccessor }, { header: 'District', accessorKey: 'DistrictName' }, { header: 'Block', accessorKey: 'BlockName' }, { header: 'Gram Panchayat (GP)', accessorKey: 'GPName' }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'Phone Number', accessorFn: contactAccessor }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, { header: 'ICDS Code', accessorFn: icdsCodeAccessor }, { header: 'Health Centre', accessorFn: healthNameAccessor }, { header: 'Health ID', accessorKey: 'HMID' }
+  ];
+  const infectiousDiseasesMainColumns = [
+    { header: 'Disease', accessorKey: 'disease' }, { header: 'Patient Name', accessorFn: nameAccessor }, { header: 'Gram Panchayat (GP)', accessorKey: 'GPName' }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'Health Centre', accessorFn: healthNameAccessor }
+  ];
+
+  // 5. TB & Leprosy (Simpler Structure)
+  const tbLeprosyAllColumns = [
+    { header: 'Patient Name', accessorFn: nameAccessor }, { header: 'District', accessorKey: 'DistrictName' }, { header: 'Block', accessorKey: 'BlockName' }, { header: 'Gram Panchayat (GP)', accessorKey: 'GPName' }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'Phone Number', accessorFn: contactAccessor }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, { header: 'ICDS Code', accessorFn: icdsCodeAccessor }, { header: 'Health Centre', accessorFn: healthNameAccessor }, { header: 'Health ID', accessorKey: 'HMID' }
+  ];
+  const tbLeprosyMainColumns = [
+    { header: 'Patient Name', accessorFn: nameAccessor }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'Phone Number', accessorFn: contactAccessor }, { header: 'ICDS Centre', accessorFn: icdsNameAccessor },
+  ];
+
+  // 6. ICDS Centre Info (Unique Informational Structure)
+  const icdsCentreAllColumns = [
+    { header: 'AWC Name', accessorKey: 'AWCName' }, { header: 'AWC Code', accessorKey: 'AWCNo' }, { header: 'GP Name', accessorKey: 'GPName' }, { header: 'Block Name', accessorKey: 'BlockName' }, { header: 'Village', accessorKey: 'VillageName' }, { header: 'AWW Name', accessorKey: 'AWWName' }, { header: 'AWW Contact', accessorKey: 'AWWContactNo' }, { header: 'AWH Name', accessorKey: 'AWHName' }, { header: 'AWH Contact', accessorKey: 'AWHContactNo' }, { header: 'Ownership', accessorKey: 'OwnerShipTypeName' }, { header: 'Kitchen?', accessorKey: 'IsKitchenAvailable' }, { header: 'Toilet?', accessorKey: 'IsToiletAvailable' },
+  ];
+  const icdsCentreMainColumns = [
+    { header: 'AWC Name', accessorKey: 'AWCName' }, { header: 'AWC Code', accessorKey: 'AWCNo' }, { header: 'GP Name', accessorKey: 'GPName' }, { header: 'AWW Name', accessorKey: 'AWWName' }, { header: 'AWW Contact', accessorKey: 'AWWContactNo' },
+  ];
+
+  // 7. Health Centre Info (Unique Informational Structure)
+  const healthCentreAllColumns = [
+    { header: 'Health Centre', accessorKey: 'HealthCentreName' }, { header: 'Health Centre Code', accessorKey: 'HealthCentreCodeNo' }, { header: 'GP Name', accessorKey: 'GPName' }, { header: 'Block Name', accessorKey: 'BlockName' }, { header: 'ANM Name', accessorKey: 'ANMName' }, { header: 'ANM Contact', accessorKey: 'ANMContactNo' }, { header: 'CHO Name', accessorKey: 'CHOName' }, { header: 'CHO Contact', accessorKey: 'CHOContactNo' }, { header: 'Ownership', accessorKey: 'OwnerShipTypeName' }, { header: 'Power?', accessorKey: 'IsPowerSupplyAvailable' }, { header: 'Water?', accessorKey: 'IsWaterSupplyAvailable' }, { header: 'Internet?', accessorKey: 'IsInternetAvailable' }, { header: 'Toilet?', accessorKey: 'IsToiletAvailable' },
+  ];
+  const healthCentreMainColumns = [
+    { header: 'Health Centre', accessorKey: 'HealthCentreName' }, { header: 'Health Centre Code', accessorKey: 'HealthCentreCodeNo' }, { header: 'GP Name', accessorKey: 'GPName' }, { header: 'ANM Name', accessorKey: 'ANMName' }, { header: 'CHO Name', accessorKey: 'CHOName' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8">
         <FilterSection onFilter={handleFilter} onExport={handleGlobalExport} />
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
-            <strong className="font-bold">Error: </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-
-        {/* Pass live data and loading state to MetricsSection */}
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative my-6" role="alert">{error}</div>}
         <MetricsSection data={metricsData} isLoading={isLoading} />
 
         <div className="space-y-8 mt-8">
-          <div className="bg-white rounded-lg shadow-xl p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Mother & Child Information</h2>
-            <div className="space-y-10">
-              <TableWrapper title="Childbirths (Last One Month) - Only Non-Institutional Births" onExport={() => handleExportTable('Childbirths (Non-Institutional)')}><DataTable columns={motherColumns} data={reportData?.childbirths_last_month || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Marriages - Under Age" onExport={() => handleExportTable('Under Age Marriages')}><DataTable columns={motherColumns} data={reportData?.marriages_under_age || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Children with Low Birth Weight" onExport={() => handleExportTable('Low Birth Weight Children')}><DataTable columns={childColumns} data={reportData?.children_low_birth_weight || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Children who have not Completed Immunization" onExport={() => handleExportTable('Incomplete Immunization')}><DataTable columns={motherColumns} data={reportData?.no_immunization || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Under 20 Years of Age Pregnant Mothers" onExport={() => handleExportTable('Young Pregnant Mothers')}><DataTable columns={motherColumns} data={reportData?.under_20_pregnant || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Teenage Pregnancy Registered" onExport={() => handleExportTable('Teenage Pregnancy')}><DataTable columns={motherColumns} data={reportData?.teenage_pregnancy || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Pregnant Women with High-Risk Pregnancy" onExport={() => handleExportTable('High-Risk Pregnancy')}><DataTable columns={motherColumns} data={reportData?.high_risk_pregnancy || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Malnourished Children" onExport={() => handleExportTable('Malnourished Children')}><DataTable columns={childColumns} data={reportData?.malnourished_children || []} isLoading={isLoading} /></TableWrapper>
-              <TableWrapper title="Severely Underweight Children" onExport={() => handleExportTable('Severely Underweight Children')}><DataTable columns={childColumns} data={reportData?.severely_underweight || []} isLoading={isLoading} /></TableWrapper>
-            </div>
-          </div>
-          <TableWrapper title="Infectious Diseases" onExport={() => handleExportTable('Infectious Diseases')}><DataTable columns={infectiousDiseaseColumns} data={reportData?.infectious_diseases || []} isLoading={isLoading} /></TableWrapper>
-          <TableWrapper title="TB and Leprosy Patients" onExport={() => handleExportTable('TB and Leprosy Patients')}><DataTable columns={tbLeprosyColumns} data={reportData?.tb_leprosy || []} isLoading={isLoading} /></TableWrapper>
-          <TableWrapper title="Adolescent Girls who are Anemic" onExport={() => handleExportTable('Adolescent Girls (Anemic)')}><DataTable columns={adolescentGirlsColumns} data={reportData?.anemic_adolescent_girls || []} isLoading={isLoading} /></TableWrapper>
-          <TableWrapper title="ICDS Centre Information" onExport={() => handleExportTable('ICDS Centre Information')}><DataTable columns={icdsCentreColumns} data={reportData?.icds_center_info || []} isLoading={isLoading} /></TableWrapper>
-          <TableWrapper title="Health Centre Information" onExport={() => handleExportTable('Health Centre Information')}><DataTable columns={healthCentreColumns} data={reportData?.health_center_info || []} isLoading={isLoading} /></TableWrapper>
+          <ReportSection title="Childbirths (Non-Institutional)" data={reportData?.childbirths_last_month || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="Under Age Marriages" data={reportData?.marriages_under_age || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="Children with Low Birth Weight" data={reportData?.children_low_birth_weight || []} mainColumns={childMainColumns} allColumns={childAllColumns} isLoading={isLoading} />
+          <ReportSection title="Incomplete Immunization" data={reportData?.no_immunization || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="Under 20 Pregnant Mothers" data={reportData?.under_20_pregnant || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="Teenage Pregnancy Registered" data={reportData?.teenage_pregnancy || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="High-Risk Pregnancies" data={reportData?.high_risk_pregnancy || []} mainColumns={motherMainColumns} allColumns={motherAllColumns} isLoading={isLoading} />
+          <ReportSection title="Malnourished Children" data={reportData?.malnourished_children || []} mainColumns={childMainColumns} allColumns={childAllColumns} isLoading={isLoading} />
+          <ReportSection title="Severely Underweight Children" data={reportData?.severely_underweight || []} mainColumns={childMainColumns} allColumns={childAllColumns} isLoading={isLoading} />
+          <ReportSection title="Anemic Adolescent Girls" data={reportData?.anemic_adolescent_girls || []} mainColumns={anemicAdolescentGirlsMainColumns} allColumns={anemicAdolescentGirlsAllColumns} isLoading={isLoading} />
+          <ReportSection title="Infectious Diseases" data={reportData?.infectious_diseases || []} mainColumns={infectiousDiseasesMainColumns} allColumns={infectiousDiseasesAllColumns} isLoading={isLoading} />
+          <ReportSection title="TB and Leprosy Patients" data={reportData?.tb_leprosy || []} mainColumns={tbLeprosyMainColumns} allColumns={tbLeprosyAllColumns} isLoading={isLoading} />
+          <ReportSection title="ICDS Centre Information" data={reportData?.icds_center_info || []} mainColumns={icdsCentreMainColumns} allColumns={icdsCentreAllColumns} isLoading={isLoading} />
+          <ReportSection title="Health Centre Information" data={reportData?.health_center_info || []} mainColumns={healthCentreMainColumns} allColumns={healthCentreAllColumns} isLoading={isLoading} />
         </div>
       </main>
       <footer className="bg-gray-800 text-white py-6 mt-12">

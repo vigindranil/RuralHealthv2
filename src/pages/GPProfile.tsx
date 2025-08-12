@@ -64,6 +64,7 @@ export default function GPProfile(): JSX.Element {
   const decodedToken: DecodedToken | null = decodeJwtToken(token);
   const role = decodedToken?.UserTypeName;
   const userId = decodedToken?.UserID;
+  const userTypeId = decodedToken?.UserTypeID;
   const boundaryId = decodedToken?.BoundaryID; // This is the GPID
   const boundaryLevelId = decodedToken?.BoundaryLevelID;
   const gpNameFromToken = decodedToken?.UserFullName; // Assuming GP name is in the token
@@ -131,7 +132,7 @@ export default function GPProfile(): JSX.Element {
   }, [boundaryId, userId, boundaryLevelId, gpNameFromToken]);
 
   // Role-based access control
-  if (role !== 'GPAdmin' && role !== 'District Admin') {
+  if (userTypeId !== 600) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="p-8 text-red-600 bg-red-50 rounded-lg shadow-md font-bold text-center">

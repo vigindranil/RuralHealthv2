@@ -107,7 +107,10 @@ const DataTable = <T extends Record<string, any>>({
                                         {isExpandable && (
                                             <td className="px-4 py-2 text-center align-top">
                                                 <button
-                                                    onClick={() => setExpanded((prev) => (prev === absoluteIndex ? null : absoluteIndex))}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setExpanded((prev) => (prev === absoluteIndex ? null : absoluteIndex));
+                                                    }}
                                                     className="p-1.5 focus:outline-none"
                                                     aria-label="Expand row"
                                                 >
