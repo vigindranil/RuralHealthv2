@@ -45,7 +45,7 @@ const DataTable = <T extends Record<string, any>>({
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
             setExpanded(null);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
