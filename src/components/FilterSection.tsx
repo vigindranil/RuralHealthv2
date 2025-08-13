@@ -26,6 +26,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onFilter, onExport }) => 
     const [selectedGp, setSelectedGp] = useState<string>(""); // Stores stringified Boundary object
     const [isLoadingBlocks, setIsLoadingBlocks] = useState(true);
     const [isLoadingGps, setIsLoadingGps] = useState(false);
+    const decoded = decodeJwtToken(Cookies.get('authToken'));
+    const userTypeID = decoded?.UserTypeID;
 
     useEffect(() => {
         const getMonths = async () => {
@@ -126,20 +128,25 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onFilter, onExport }) => 
                     <label className="block text-sm font-medium text-gray-700 mb-1"><Calendar className="w-4 h-4 inline-block mr-1" />Select Month</label>
                     <Select value={monthOptions.find(o => o.value === selectedMonth)} options={monthOptions} onChange={o => setSelectedMonth(o?.value ?? "")} isLoading={isLoadingMonths} isDisabled={isLoadingMonths || !monthlyDateRanges.length} isClearable placeholder={isLoadingMonths ? "Loading..." : "Select Month"} classNamePrefix="react-select" />
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Block</label>
-                    <select value={selectedBlock} onChange={e => setSelectedBlock(e.target.value)} disabled={isLoadingBlocks} className="w-full h-[38px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="">ALL</option>
-                        {blocks.map(b => <option key={b.InnerBoundaryID} value={JSON.stringify(b)}>{b.InnerBoundaryName}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select GP</label>
-                    <select value={selectedGp} onChange={e => setSelectedGp(e.target.value)} disabled={!selectedBlock || isLoadingGps} className="w-full h-[38px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option value="">ALL</option>
-                        {gps.map(g => <option key={g.InnerBoundaryID} value={JSON.stringify(g)}>{g.InnerBoundaryName}</option>)}
-                    </select>
-                </div>
+
+                {userTypeID !== 600 && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Block</label>
+                            <select value={selectedBlock} onChange={e => setSelectedBlock(e.target.value)} disabled={isLoadingBlocks} className="w-full h-[38px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                <option value="">ALL</option>
+                                {blocks?.map(b => <option key={b.InnerBoundaryID} value={JSON.stringify(b)}>{b.InnerBoundaryName}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select GP</label>
+                            <select value={selectedGp} onChange={e => setSelectedGp(e.target.value)} disabled={!selectedBlock || isLoadingGps} className="w-full h-[38px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                <option value="">ALL</option>
+                                {gps.map(g => <option key={g.InnerBoundaryID} value={JSON.stringify(g)}>{g.InnerBoundaryName}</option>)}
+                            </select>
+                        </div>
+                    </>
+                )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleSubmit} className="flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"><Search className="w-4 h-4 mr-2" />Submit</button>

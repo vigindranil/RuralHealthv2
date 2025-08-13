@@ -91,8 +91,8 @@ export const fetchGpProfileReport = async (filters: ReportFilters): Promise<GpPr
     UserID: decoded.UserID,
     BoundaryLevelID: finalBoundaryLevelId, 
     BoundaryID: finalBoundaryId,
-    FromDate: filters.fromDate,
-    ToDate: filters.toDate,
+    FromDate: filters.fromDate || null,
+    ToDate: filters.toDate || null,
   };
 
   const response = await fetch(`${BASE_URL}/get-gp-profile-report`, {
@@ -121,6 +121,7 @@ export const fetchBoundaryDetails = async (boundaryId: string, boundaryLevelId: 
   if (!token) throw new Error('Authentication token not found.');
 
   const decoded = decodeJwtToken(token);
+  const userTypeID = decoded?.UserTypeID;
   if (!decoded || !decoded.UserID) {
     throw new Error('Invalid token: UserID is missing.');
   }
@@ -132,15 +133,19 @@ export const fetchBoundaryDetails = async (boundaryId: string, boundaryLevelId: 
     LoginUserID: decoded.UserID.toString(),
   };
 
-  const response = await fetch(`${BASE_URL}/get-boundary-details-by-boundary-id`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+  if (userTypeID !== 600) {
+    const response = await fetch(`${BASE_URL}/get-boundary-details-by-boundary-id`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+   
+    if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
+    const result = await response.json();
+    if (result.status !== 0) throw new Error(result.message || "Failed to fetch boundary details.");
+    
+    return result.data || [];
+  }
 
-  if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
-  const result = await response.json();
-  if (result.status !== 0) throw new Error(result.message || "Failed to fetch boundary details.");
-  
-  return result.data || [];
+
 };

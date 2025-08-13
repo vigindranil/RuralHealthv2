@@ -3,15 +3,13 @@ import { Plus, Minus, Inbox, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
-// --- Generic Type Definitions ---
-
-// Defines a column's header and how to access the data for it
+// Updated ColumnDef to support both accessorKey and accessorFn
 export interface ColumnDef<T> {
     header: string;
-    accessorKey: keyof T;
+    accessorKey?: keyof T;
+    accessorFn?: (row: T) => any;
 }
 
-// Props for our reusable DataTable component
 interface DataTableProps<T> {
     data: T[];
     columns: ColumnDef<T>[];
@@ -20,8 +18,6 @@ interface DataTableProps<T> {
     renderExpandedRow?: (row: T) => React.ReactNode;
     noDataComponent?: React.ReactNode;
 }
-
-// --- The Reusable DataTable Component ---
 
 const DataTable = <T extends Record<string, any>>({
     data,
@@ -48,14 +44,24 @@ const DataTable = <T extends Record<string, any>>({
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
-            setExpanded(null); // Collapse rows on page change
+            setExpanded(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-
     const handleToggleExpand = (index: number) => {
         setExpanded((prev) => (prev === index ? null : index));
+    };
+
+    // Helper function to get cell value - supports both accessorKey and accessorFn
+    const getCellValue = (row: T, column: ColumnDef<T>) => {
+        if (column.accessorFn) {
+            return column.accessorFn(row);
+        }
+        if (column.accessorKey) {
+            return row[column.accessorKey];
+        }
+        return null;
     };
 
     if (isLoading) {
@@ -102,14 +108,16 @@ const DataTable = <T extends Record<string, any>>({
                             const absoluteIndex = startIndex + idx;
                             return (
                                 <React.Fragment key={absoluteIndex}>
-                                    <tr className={`group hover:bg-blue-50/70 transition-colors border-b border-blue-100 ${isExpandable ? 'cursor-pointer' : ''}`}
-                                        onClick={isExpandable ? () => handleToggleExpand(absoluteIndex) : undefined}>
+                                    <tr
+                                        className={`group hover:bg-blue-50/70 transition-colors border-b border-blue-100 ${isExpandable ? 'cursor-pointer' : ''}`}
+                                        onClick={isExpandable ? () => handleToggleExpand(absoluteIndex) : undefined}
+                                    >
                                         {isExpandable && (
                                             <td className="px-4 py-2 text-center align-top">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setExpanded((prev) => (prev === absoluteIndex ? null : absoluteIndex));
+                                                        handleToggleExpand(absoluteIndex);
                                                     }}
                                                     className="p-1.5 focus:outline-none"
                                                     aria-label="Expand row"
@@ -122,11 +130,14 @@ const DataTable = <T extends Record<string, any>>({
                                                 </button>
                                             </td>
                                         )}
-                                        {columns.map((col) => (
-                                            <td key={col.header} className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900">
-                                                {row[col.accessorKey] || <span className="text-gray-400 italic">N/A</span>}
-                                            </td>
-                                        ))}
+                                        {columns.map((col) => {
+                                            const cellValue = getCellValue(row, col);
+                                            return (
+                                                <td key={col.header} className="px-4 py-2 text-sm text-gray-800 whitespace-nowrap align-top group-hover:text-blue-900">
+                                                    {cellValue || <span className="text-gray-400 italic">N/A</span>}
+                                                </td>
+                                            );
+                                        })}
                                     </tr>
                                     {isExpandable && expanded === absoluteIndex && renderExpandedRow && (
                                         <tr>
@@ -179,6 +190,5 @@ const DataTable = <T extends Record<string, any>>({
         </>
     );
 };
-
 
 export default DataTable;
