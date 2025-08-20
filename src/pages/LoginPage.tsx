@@ -140,14 +140,46 @@ export default function LoginPage() {
           {(Object.keys(roleConfig) as Array<keyof typeof roleConfig>).map((role) => {
             const config = roleConfig[role];
             const isSelected = formData.role === role;
+
+            // Get the background color for checkmark based on role
+            const getCheckmarkColor = () => {
+              switch (role) {
+                case 'GP':
+                  return 'bg-blue-600';
+                case 'Health Centre':
+                  return 'bg-green-600';
+                case 'ICDS Centre':
+                  return 'bg-purple-600';
+                case 'District Admin':
+                  return 'bg-orange-600';
+                default:
+                  return 'bg-blue-600';
+              }
+            };
+            const getCardColors = () => {
+              if (!isSelected) {
+                return 'bg-white/10 border border-white/20 hover:bg-white/15 backdrop-blur-sm';
+              }
+
+              switch (role) {
+                case 'GP':
+                  return 'bg-blue-600/40 border border-blue-400/40 backdrop-blur-md';
+                case 'Health Centre':
+                  return 'bg-green-600/40 border border-green-400/40 backdrop-blur-md';
+                case 'ICDS Centre':
+                  return 'bg-purple-600/40 border border-purple-400/40 backdrop-blur-md';
+                case 'District Admin':
+                  return 'bg-orange-600/40 border border-orange-400/40 backdrop-blur-md';
+                default:
+                  return 'bg-white/40 border border-white/40 backdrop-blur-md';
+              }
+            };
+
             return (
               <div
                 key={role}
                 onClick={() => setFormData({ ...formData, role })}
-                className={`cursor-pointer p-6 rounded-xl transition-all duration-300 ${isSelected
-                  ? 'bg-white/20 border border-white/40 backdrop-blur-md'
-                  : 'bg-white/10 border border-white/20 hover:bg-white/15 backdrop-blur-sm'
-                  }`}
+                className={`cursor-pointer p-6 rounded-xl transition-all duration-300 ${getCardColors()} ${isSelected ? 'transform scale-[1.01]' : ''}`}
               >
                 <div className="flex items-center space-x-4">
                   <div className={`p-3 rounded-lg ${isSelected ? 'bg-white/30' : 'bg-white/20'}`}>
@@ -158,7 +190,7 @@ export default function LoginPage() {
                     <p className="text-blue-100 text-sm">{config.fullDescription}</p>
                   </div>
                   {isSelected && (
-                    <div className="bg-white/30 p-2 rounded-full">
+                    <div className={`${getCheckmarkColor()} border-2 border-white p-2 rounded-full`}>
                       <CheckCircle className="w-5 h-5 text-white" />
                     </div>
                   )}
@@ -295,8 +327,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-
           </div>
 
           {/* Back to Home */}

@@ -261,7 +261,7 @@ export default function WorkInProgress() {
     { header: 'Patient Name', accessorFn: nameAccessor },
     { header: 'Village', accessorFn: villageAccessor },
     { header: 'Phone Number', accessorFn: contactAccessor },
-    { header: 'ICDS Centre', accessorFn: icdsNameAccessor },
+    { header: 'ICDS Centre', accessorFn: icdsNameAccessor }, 
   ];
 
   // ICDS Centre Info (Unique Informational Structure)
