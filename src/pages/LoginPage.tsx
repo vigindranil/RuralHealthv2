@@ -177,7 +177,7 @@ export default function LoginPage() {
               <div
                 key={role}
                 onClick={() => setFormData({ ...formData, role })}
-                className={`cursor-pointer p-6 rounded-xl transition-all duration-300 ${getCardColors()} ${isSelected ? 'transform scale-[1.02]' : ''}`}
+                className={`cursor-pointer p-6 rounded-xl transition-all duration-300 ${getCardColors()} ${isSelected ? 'transform scale-[1.01]' : ''}`}
               >
                 <div className="flex items-center space-x-4">
                   <div className={`p-3 rounded-lg ${isSelected ? 'bg-white/30' : 'bg-white/20'}`}>
