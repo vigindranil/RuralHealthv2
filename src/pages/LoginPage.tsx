@@ -215,7 +215,7 @@ export default function LoginPage() {
                 <p className="text-gray-600 text-sm">Secure Access Portal</p>
               </div>
             </div>
-          </div>
+          </div>    
 
           {/* Login Card */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">

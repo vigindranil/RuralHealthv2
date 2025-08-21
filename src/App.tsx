@@ -21,6 +21,7 @@ import ICDSDataEntry from "./pages/ICDSDataEntry";
 import HealthCentreDataEntry from "./pages/HealthCentreDataEntry";
 import { useLocation } from "react-router-dom";
 import { ToastProvider } from "../src/context/ToastContext"
+import DistrictHealthDashboard from "./pages/ReportV2"
 
 
 
@@ -107,7 +108,8 @@ function AppContent() {
           path="/reports"
           element={
             <ProtectedRoute>
-              <Reports />
+              {/* <Reports /> */}
+              <DistrictHealthDashboard />
             </ProtectedRoute>
           }
         />

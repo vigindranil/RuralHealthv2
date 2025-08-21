@@ -13,7 +13,7 @@ interface FilterSectionProps {
     onExport: () => void;
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({ onFilter, onExport }) => {
+const  FilterSection: React.FC<FilterSectionProps> = ({ onFilter, onExport }) => {
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState<string>("");
     const [monthlyDateRanges, setMonthlyDateRanges] = useState<MonthDateRange[]>([]);
