@@ -14,6 +14,7 @@ import DataTable from "../components/DataTable";
 // API Functions
 import { getRawUnderageMarriageData } from "../api/dataEntry";
 import { getnonmatrimarelatedinfo } from "../api/fetchCall";
+import { formatDateForDisplay } from "../utils/dateUtils";
 
 // --- Type Definitions ---
 interface TableRow {
@@ -83,6 +84,15 @@ const mainTableColumns: ColumnDef<TableRow>[] = [
   { header: "Health Centre Name", accessorKey: "Health Centre Name" },
 ];
 
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  };
+  return date.toLocaleDateString('en-US', options);
+};
 
 const ModuleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -92,6 +102,9 @@ const ModuleDetailPage: React.FC = () => {
   // 3. Extract fromDate and toDate from the URL
   const fromDate = searchParams.get("fromDate");
   const toDate = searchParams.get("toDate");
+
+
+
 
   const token = Cookies.get("authToken");
   const decoded: DecodedToken | null = decodeJwtToken(token);
@@ -105,6 +118,12 @@ const ModuleDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const idsToUseNonMatrimaApi = [2, 10, 11, 12];
+
+
+  // Format the date range for display
+  const dateRangeDisplay = fromDate && toDate
+    ? `${formatDate(fromDate)} - ${formatDate(toDate)}`
+    : "selected period";
 
   useEffect(() => {
     const fetchDataAndTransform = async () => {
@@ -268,7 +287,7 @@ const ModuleDetailPage: React.FC = () => {
             </span>
           </h1>
           <p className="text-gray-500 text-lg">
-            Detailed data for the selected period
+            Detailed data for {dateRangeDisplay}
           </p>
         </div>
 
