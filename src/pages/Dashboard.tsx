@@ -263,6 +263,47 @@ export default function Dashboard() {
     label: year.toString()
   }));
 
+
+  const navigateToDetails = (statId: string) => {
+    const params = new URLSearchParams();
+
+    let finalFromDate = dateRange.fromDate;
+    let finalToDate = dateRange.toDate;
+    let finalMonth = "";
+
+    // If no month was manually selected (dateRange is empty),
+    // use the most recent available month as the default.
+    // This ensures the URL always has the correct dates.
+    if (!finalFromDate && monthlyDateRanges && monthlyDateRanges.length > 0) {
+      // Assuming the API sends the most recent month first in the array
+      const mostRecentMonth = monthlyDateRanges[0];
+      finalFromDate = mostRecentMonth.fromDate;
+      finalToDate = mostRecentMonth.toDate;
+      finalMonth = mostRecentMonth.month;
+    }
+
+    // Always add fromDate and toDate if they exist
+    if (finalFromDate && finalToDate) {
+      params.set('fromDate', finalFromDate);
+      params.set('toDate', finalToDate);
+    }
+
+    // Add year
+    if (selectedYear) {
+      params.set('year', selectedYear.toString());
+    }
+
+    // Add month name, either from user selection or our default logic
+    if (selectedMonth) {
+      const monthData = JSON.parse(selectedMonth);
+      params.set('month', monthData.month);
+    } else if (finalMonth) {
+      params.set('month', finalMonth);
+    }
+
+    navigate(`/details/${statId}?${params.toString()}`);
+  };
+
   console.log('selected month:', selectedMonth);
   console.log('selected year:', selectedYear);
 
@@ -295,7 +336,6 @@ export default function Dashboard() {
               value={monthOptions.find(opt => opt.value === selectedMonth)}
               options={monthOptions}
               onChange={(selectedOption) => {
-                // selectedOption will be null if the clear button is clicked
                 const monthValue = selectedOption ? selectedOption.value : "";
                 setSelectedMonth(monthValue);
 
@@ -303,15 +343,11 @@ export default function Dashboard() {
                   const monthData: MonthDateRange = JSON.parse(monthValue);
                   // This is now the ONLY place that updates dateRange after initial load
                   setDateRange({ fromDate: monthData.fromDate, toDate: monthData.toDate });
-                  sessionStorage.setItem(
-                    'dashboardDateRange',
-                    JSON.stringify({ fromDate: monthData.fromDate, toDate: monthData.toDate })
-                  );
+                  // REMOVED: sessionStorage.setItem(...) - No longer needed!
                 } else {
                   // Handle clearing the selection
-                  // Optional: if you want selecting "Select Month" to revert to the initial view
-                  // setDateRange({ fromDate: "", toDate: "" }); 
-                  sessionStorage.removeItem('dashboardDateRange');
+                  setDateRange({ fromDate: "", toDate: "" });
+                  // REMOVED: sessionStorage.removeItem(...) - No longer needed!
                 }
               }}
               isDisabled={!monthlyDateRanges.length}
@@ -433,7 +469,7 @@ export default function Dashboard() {
                   >
                     <StatsCard
                       {...restStat}
-                      onClick={() => navigate(`/details/${stat.id}`)}
+                      onClick={() => navigateToDetails(stat.id)} // ✅ Use the new function
                     />
                   </div>
                 );

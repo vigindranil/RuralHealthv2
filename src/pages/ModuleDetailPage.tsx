@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"; // 1. Import useSearchParams
 import { Plus, Minus, FileDown, Inbox, ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -15,9 +15,7 @@ import DataTable from "../components/DataTable";
 import { getRawUnderageMarriageData } from "../api/dataEntry";
 import { getnonmatrimarelatedinfo } from "../api/fetchCall";
 
-// --- Type Definitions for TypeScript ---
-
-// Shape of the data used directly in the table rows
+// --- Type Definitions ---
 interface TableRow {
   "Name": string;
   "District": string;
@@ -33,7 +31,6 @@ interface TableRow {
   [key: string]: string;
 }
 
-// Shape of a single record from the API response
 interface ApiRecord {
   name?: string;
   district?: string;
@@ -48,14 +45,13 @@ interface ApiRecord {
   healthCentreId?: string;
 }
 
-// Shape of the decoded JWT token payload
 interface DecodedToken {
   BoundaryLevelID?: number;
   BoundaryID?: number;
   UserID?: string;
 }
 
-// Setup for Leaflet map icons
+// --- Leaflet Icon Setup ---
 L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -64,8 +60,7 @@ L.Icon.Default.mergeOptions({
   iconAnchor: [12, 41],
 });
 
-
-// This defines ALL columns. Used for the expanded view and data export.
+// --- Column Definitions ---
 const allTableColumns: ColumnDef<TableRow>[] = [
   { header: "Name", accessorKey: "Name" },
   { header: "District", accessorKey: "District" },
@@ -80,7 +75,6 @@ const allTableColumns: ColumnDef<TableRow>[] = [
   { header: "Health Centre ID", accessorKey: "Health Centre ID" },
 ];
 
-// This defines only the columns for the MAIN table view.
 const mainTableColumns: ColumnDef<TableRow>[] = [
   { header: "Name", accessorKey: "Name" },
   { header: "Husband Name", accessorKey: "Husband Name" },
@@ -90,33 +84,14 @@ const mainTableColumns: ColumnDef<TableRow>[] = [
 ];
 
 
-const columns: ColumnDef<TableRow>[] = [
-  { header: "Name", accessorKey: "Name" },
-  { header: "District", accessorKey: "District" },
-  { header: "Block", accessorKey: "Block" },
-  { header: "Gram Panchayat (GP)", accessorKey: "Gram Panchayat (GP)" },
-  { header: "Village Name", accessorKey: "Village Name" },
-  { header: "Husband Name", accessorKey: "Husband Name" },
-  { header: "Phone Number", accessorKey: "Phone Number" },
-  { header: "ICDS Centre Name", accessorKey: "ICDS Centre Name" },
-  { header: "ICDS Centre ID", accessorKey: "ICDS Centre ID" },
-  { header: "Health Centre Name", accessorKey: "Health Centre Name" },
-  { header: "Health Centre ID", accessorKey: "Health Centre ID" },
-];
-const ITEMS_PER_PAGE = 10;
-
-// Table headers remain the same, matching the API response structure
-const tableHeaders: string[] = [
-  "Name", "District", "Block", "Gram Panchayat (GP)", "Village Name",
-  "Husband Name", "Phone Number", "ICDS Centre Name", "ICDS Centre ID",
-  "Health Centre Name", "Health Centre ID",
-];
-
-
-
 const ModuleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // 2. Get URL search params
+
+  // 3. Extract fromDate and toDate from the URL
+  const fromDate = searchParams.get("fromDate");
+  const toDate = searchParams.get("toDate");
 
   const token = Cookies.get("authToken");
   const decoded: DecodedToken | null = decodeJwtToken(token);
@@ -128,8 +103,6 @@ const ModuleDetailPage: React.FC = () => {
   const [tableData, setTableData] = useState<TableRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const idsToUseNonMatrimaApi = [2, 10, 11, 12];
 
@@ -141,11 +114,16 @@ const ModuleDetailPage: React.FC = () => {
         return;
       }
 
+      // Add a check to ensure dates are present in the URL
+      if (!fromDate || !toDate) {
+        setError("Date range is missing. Please return to the dashboard and select a period.");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       setTableData([]);
-      setCurrentPage(1);
-      setExpanded(null);
 
       try {
         let apiFunction: (...args: any[]) => Promise<any>;
@@ -154,12 +132,18 @@ const ModuleDetailPage: React.FC = () => {
 
         if (idsToUseNonMatrimaApi.includes(numericId)) {
           apiFunction = getnonmatrimarelatedinfo;
-          requestParams = [numericId, String(BoundaryLevelID), String(BoundaryID), String(UserID), null, null];
+          // 4. Use the dates extracted from the URL
+          requestParams = [
+            numericId,
+            String(BoundaryLevelID),
+            String(BoundaryID),
+            String(UserID),
+            fromDate,
+            toDate
+          ];
         } else {
-          const savedDateRange = sessionStorage.getItem('dashboardDateRange');
-          const { fromDate, toDate } = savedDateRange ? JSON.parse(savedDateRange) : { fromDate: null, toDate: null };
-
           apiFunction = getRawUnderageMarriageData;
+          // 4. Use the dates extracted from the URL
           requestParams = [{
             HMTypeID: id,
             BoundaryLevelID: String(BoundaryLevelID),
@@ -210,7 +194,7 @@ const ModuleDetailPage: React.FC = () => {
     };
 
     fetchDataAndTransform();
-  }, [id, BoundaryID, BoundaryLevelID, UserID]);
+  }, [id, BoundaryID, BoundaryLevelID, UserID, fromDate, toDate]); // 5. Added fromDate and toDate to dependencies
 
   const handleExport = (): void => {
     if (!tableData.length) return;
@@ -231,10 +215,6 @@ const ModuleDetailPage: React.FC = () => {
       ))}
     </div>
   );
-
-
-
-
 
   const NoDataDisplay = () => (
     <div className="text-center py-16">
